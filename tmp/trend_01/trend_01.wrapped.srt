@@ -1,0 +1,8 @@
+﻿1
+00:00:00,000 --> 00:00:08,000
+topic : Google original : #Google
+position : 1 source :
+ol.trend-card__list li a score : 11
+spike : 0 interest : 0 velocityScore : 0
+final_pre_tune : 11 tuned_score : 11
+

@@ -1,0 +1,8 @@
+﻿1
+00:00:00,000 --> 00:00:08,000
+topic : Stand FOR Nani original : STAND
+FOR NANI position : 3 source :
+ol.trend-card__list li a score : 9 spike
+: 0 interest : 0 velocityScore : 0
+final_pre_tune : 9 tuned_score : 9
+

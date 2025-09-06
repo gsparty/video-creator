@@ -1,0 +1,8 @@
+﻿1
+00:00:00,000 --> 00:00:08,000
+topic : Tsue original : TSUE position :
+10 source : ol.trend-card__list li a
+score : 2 spike : 0 interest : 0
+velocityScore : 0 final_pre_tune : 2
+tuned_score : 2
+

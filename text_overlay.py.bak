@@ -1,0 +1,66 @@
+﻿# text_overlay.py
+from moviepy.editor import TextClip, ImageClip
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+
+# Resampling compatibility for Pillow versions
+try:
+    RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
+except AttributeError:
+    RESAMPLE_LANCZOS = getattr(Image, "LANCZOS", getattr(Image, "ANTIALIAS", Image.BICUBIC))
+
+def make_text_clip(text, fontsize=64, color="white", size=(1080,1920), align="center", duration=5, font_paths=None):
+    """
+    Return a MoviePy clip containing the provided text.
+    Tries MoviePy TextClip (ImageMagick). If that fails, renders text with Pillow and returns an ImageClip.
+    """
+    if font_paths is None:
+        font_paths = [
+            r"C:\Windows\Fonts\arial.ttf",
+            r"C:\Windows\Fonts\segoeui.ttf",
+            r"C:\Windows\Fonts\calibri.ttf",
+        ]
+    # 1) try ImageMagick-backed TextClip
+    try:
+        return TextClip(text, fontsize=fontsize, color=color, method="caption", align=align, size=size).set_duration(duration)
+    except Exception:
+        # 2) fallback using Pillow
+        font = None
+        for fp in font_paths:
+            try:
+                font = ImageFont.truetype(fp, fontsize)
+                break
+            except Exception:
+                font = None
+        if font is None:
+            font = ImageFont.load_default()
+
+        img = Image.new("RGBA", size, (0,0,0,0))
+        d = ImageDraw.Draw(img)
+
+        # naive wrap to fit width
+        words = text.split()
+        lines = []
+        line = ""
+        max_w = int(size[0] * 0.9)
+        for w in words:
+            candidate = (line + " " + w).strip()
+            if d.textlength(candidate, font=font) <= max_w:
+                line = candidate
+            else:
+                if line: lines.append(line)
+                line = w
+        if line:
+            lines.append(line)
+
+        line_h = getattr(font, "size", fontsize) + int(fontsize * 0.4)
+        total_h = len(lines) * line_h
+        y = max(0, (size[1] - total_h) // 2)
+        for ln in lines:
+            w = d.textlength(ln, font=font)
+            x = max(0, (size[0] - int(w)) // 2)
+            d.text((x, y), ln, font=font, fill=color)
+            y += line_h
+
+        arr = np.array(img).astype(np.uint8, copy=False).astype(np.uint8, copy=False)
+        return ImageClip(arr).set_duration(duration)

@@ -1,0 +1,5 @@
+2025-09-04 10:00:07 - AlwaysWithNani: status=error: TypeError generate_short() got an unexpected keyword argument 'region'
+2025-09-04 10:00:07 - TMKxGREEDILOUS: status=error: TypeError generate_short() got an unexpected keyword argument 'region'
+2025-09-04 10:00:07 - THOMASKONG IN SEOUL FSW: status=error: TypeError generate_short() got an unexpected keyword argument 'region'
+2025-09-04 10:00:07 - STAND FOR NANI: status=error: TypeError generate_short() got an unexpected keyword argument 'region'
+2025-09-04 10:00:07 - Facundo: status=error: TypeError generate_short() got an unexpected keyword argument 'region'

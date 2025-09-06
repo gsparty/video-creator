@@ -1,0 +1,399 @@
+#!/usr/bin/env python3
+"""
+auto_short_full.py
+
+One-stop short video generator:
+ - topic or input_video -> script (uses script_generator.generate_script if available)
+ - splits script into sentences
+ - produces TTS per-sentence with edge-tts (preferred) or gTTS fallback
+ - concatenates sentence audio with short silence between sentences
+ - creates whoosh SFX before every sentence (uses whoosh.wav provided)
+ - creates ending SFX placed to finish at video end (ending.mp3)
+ - loops background bed (background.mp3) to match duration
+ - sidechain-ducks background while speech plays (uses ffmpeg sidechaincompress)
+ - mixes everything and remuxes to MP4 with a prettier vertical crop/scale (1080x1920)
+ - output filename is timestamped + slugified topic
+
+Requirements:
+ - ffmpeg and ffprobe on PATH
+ - Python packages: requests, Pillow (for fallback image), gTTS, edge-tts (optional)
+ - Put your assets in same folder or pass paths: background.mp3, whoosh.wav, ending.mp3
+Usage examples:
+  # from a source video (will re-render to vertical 1080x1920)
+  python auto_short_full.py --input input.mp4 --out shorts
+  # from a topic string only (creates a single-image fallback video)
+  python auto_short_full.py --topic "Huge football upset today — Ronaldo shocked fans" --out shorts
+Notes:
+ - The script prints the temp dir with intermediate files for debugging.
+"""
+
+import argparse
+import subprocess
+import sys
+import re
+import os
+import json
+import shutil
+import tempfile
+from pathlib import Path
+from datetime import datetime
+
+# ---------- Utilities ----------
+def run(cmd, check=True):
+    print("CMD>", cmd)
+    res = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    out = res.stdout.decode(errors="replace")
+    if res.returncode != 0 and check:
+        raise RuntimeError(f"Command failed (rc={res.returncode}):\n{cmd}\n\n{out}")
+    return out
+
+def ffprobe_duration(path: Path) -> float:
+    cmd = f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{path}"'
+    out = run(cmd, check=False)
+    try:
+        return float(out.strip())
+    except Exception:
+        return 0.0
+
+def slugify(s: str, maxlen: int = 90):
+    s = s.strip()
+    s = s.replace("—", "-").replace("–", "-")
+    s = re.sub(r"[^\w\s-]", "", s, flags=re.UNICODE)
+    s = re.sub(r"[\s_]+", "-", s).strip("-").lower()
+    return s[:maxlen]
+
+def split_sentences(text: str):
+    text = text.strip()
+    # simple splitter on .!? — preserve punctuation as sentence end
+    parts = re.split(r'(?<=[\.\?\!])\s+', text)
+    parts = [p.strip() for p in parts if p.strip()]
+    return parts if parts else [text]
+
+# ---------- Script generation (try to import user script_generator) ----------
+def generate_script_for_topic(topic: str) -> str:
+    try:
+        import script_generator
+        return script_generator.generate_script(topic)
+    except Exception:
+        # fallback short template
+        return f"{topic}. Quick recap: What happened in one line. Why it matters now. One surprising stat or quote. Call to action: follow for more."
+
+# ---------- TTS helpers ----------
+def has_edge_tts_pkg():
+    try:
+        import edge_tts  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+def tts_edge_to_wav(text: str, out_wav: Path, voice="en-US-AriaNeural"):
+    """Use edge-tts python package to create a WAV file (44100 stereo PCM)."""
+    try:
+        import asyncio
+        import edge_tts
+    except Exception as e:
+        raise RuntimeError("edge-tts package missing") from e
+
+    async def _run_edge(text, out):
+        communicate = edge_tts.Communicate(text, voice)
+        tmp_mp3 = out.with_suffix(".edge.tmp.mp3")
+        await communicate.save(str(tmp_mp3))
+        # convert mp3 -> wav 44.1k stereo pcm for consistency
+        run(f'ffmpeg -y -i "{tmp_mp3}" -ar 44100 -ac 2 -c:a pcm_s16le "{out}"')
+        tmp_mp3.unlink(missing_ok=True)
+
+    asyncio.run(_run_edge(text, out_wav))
+    return out_wav
+
+def tts_gtts_to_wav(text: str, out_wav: Path):
+    from gtts import gTTS
+    tmp_mp3 = out_wav.with_suffix(".gtts.tmp.mp3")
+    tts = gTTS(text=text, lang="en")
+    tts.save(str(tmp_mp3))
+    run(f'ffmpeg -y -i "{tmp_mp3}" -ar 44100 -ac 2 -c:a pcm_s16le "{out_wav}"')
+    tmp_mp3.unlink(missing_ok=True)
+    return out_wav
+
+def make_sentence_tts(sentence: str, out_wav: Path):
+    # prefer edge-tts package; fallback to gTTS
+    if has_edge_tts_pkg():
+        try:
+            return tts_edge_to_wav(sentence, out_wav)
+        except Exception as e:
+            print("edge-tts (pkg) failed, falling back to gTTS:", e)
+    return tts_gtts_to_wav(sentence, out_wav)
+
+# ---------- Audio assembly helpers ----------
+def generate_sentence_audios(sentences, tmpdir: Path):
+    # create per-sentence wavs, all pcm_s16le 44100 stereo
+    sent_files = []
+    for i, s in enumerate(sentences):
+        safe = f"sent-{i:02d}.wav"
+        out = tmpdir / safe
+        print(f"[tts] generating sentence {i}: {s[:80]!r} -> {out.name}")
+        make_sentence_tts(s, out)
+        # normalize/flavor voice to consistent mp3/wav (we'll keep wav)
+        # do loudnorm + EQ/comp to maintain similar levels
+        flav = tmpdir / f"sent-{i:02d}.flav.wav"
+        run(f'ffmpeg -y -i "{out}" -af "loudnorm=I=-16:TP=-1.5:LRA=11,highpass=f=80,lowpass=f=15000,acompressor=threshold=0.05:ratio=4:attack=5:release=100" -ar 44100 -ac 2 "{flav}"')
+        out.unlink(missing_ok=True)
+        sent_files.append(flav)
+    return sent_files
+
+def make_silence(tmpdir: Path, dur=0.15):
+    sfile = tmpdir / f"sil_{int(dur*1000)}ms.wav"
+    run(f'ffmpeg -y -f lavfi -i anullsrc=cl=stereo:r=44100 -t {dur:.3f} -ar 44100 -ac 2 "{sfile}"')
+    return sfile
+
+def concat_audio_files(inputs, out_file: Path, tmpdir: Path):
+    # inputs: list of wav paths in order; we'll use concat filter
+    # build ffmpeg input args
+    inp_args = " ".join(f'-i "{p}"' for p in inputs)
+    n = len(inputs)
+    concat_tag = "".join(f'[{i}:a]' for i in range(n))
+    filter_complex = f'{concat_tag}concat=n={n}:v=0:a=1[aout]'
+    cmd = f'ffmpeg -y {inp_args} -filter_complex "{filter_complex}" -map "[aout]" -ar 44100 -ac 2 "{out_file}"'
+    run(cmd)
+    return out_file
+
+def place_whooshes_before_starts(whoosh_path: Path, starts, lead=0.12, tmpdir: Path=None):
+    # starts: list of seconds (start of sentence)
+    # create whoosh_placed_i.wav with adelay = max(0, start-lead)
+    if tmpdir is None:
+        tmpdir = whoosh_path.parent
+    placed = []
+    for i, st in enumerate(starts):
+        ms = int(round(max(0.0, st - lead) * 1000))
+        out = tmpdir / f"whoosh_{i:02d}.wav"
+        # adelay for two channels
+        run(f'ffmpeg -y -i "{whoosh_path}" -af "adelay={ms}|{ms},volume=1.0" -ar 44100 -ac 2 "{out}"')
+        placed.append(out)
+    return placed
+
+def place_ending(ending_path: Path, video_dur: float, tmpdir: Path):
+    edur = ffprobe_duration(ending_path)
+    start = max(0.0, video_dur - edur)
+    ms = int(round(start * 1000))
+    out = tmpdir / "ending_placed.wav"
+    run(f'ffmpeg -y -i "{ending_path}" -af "adelay={ms}|{ms},volume=1.0" -ar 44100 -ac 2 "{out}"')
+    return out
+
+# ---------- background bed helpers ----------
+def make_bed_loop(background: Path, duration: float, out_path: Path, vol=0.15):
+    if not background.exists():
+        # silent bed
+        run(f'ffmpeg -y -f lavfi -i anullsrc=cl=stereo:r=44100 -t {duration:.3f} -ar 44100 -ac 2 "{out_path}"')
+        return out_path
+    # loop background, trim to duration, set base volume
+    run(f'ffmpeg -y -stream_loop -1 -i "{background}" -t {duration:.3f} -af "volume={vol}" -ar 44100 -ac 2 "{out_path}"')
+    return out_path
+
+# ---------- mixing with ducking ----------
+def mix_with_ducking(bed_path: Path, voice_with_sfx: Path, out_mixed: Path):
+    # Use sidechaincompress to duck bed when voice is present.
+    # Filter flow:
+    # [0:a] (bed) -> [bed]; [1:a] (voice) -> [voice];
+    # [bed][voice]sidechaincompress=... -> [bed_duck];
+    # [bed_duck][voice]amix=inputs=2:duration=first ...
+    cmd = (
+        f'ffmpeg -y -i "{bed_path}" -i "{voice_with_sfx}" -filter_complex '
+        f'"[0:a][1:a]sidechaincompress=threshold=0.1:ratio=8:attack=5:release=200[bed_duck];'
+        f'[bed_duck][1:a]amix=inputs=2:duration=first:dropout_transition=2[aout]" '
+        f'-map "[aout]" -ar 44100 -ac 2 "{out_mixed}"'
+    )
+    run(cmd)
+    return out_mixed
+
+# ---------- video rendering ----------
+def is_vertical_video(path: Path) -> bool:
+    # use ffprobe to determine w/h
+    cmd = f'ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json "{path}"'
+    out = run(cmd, check=False)
+    try:
+        o = json.loads(out)
+        stream = o.get("streams", [])[0]
+        w = int(stream.get("width", 0))
+        h = int(stream.get("height", 0))
+        return h >= w
+    except Exception:
+        return False
+
+def render_final_video(input_video: Path, mixed_audio: Path, out_mp4: Path, target_sec: float):
+    """
+    Scale/crop a source video into portrait 1080x1920:
+      - scale down preserving aspect ratio so it fits inside 1080x1920
+      - center-pad to exactly 1080x1920
+    """
+    if not input_video:
+        raise ValueError("input_video required for render_final_video")
+
+    # Use simple reliable filter: scale into box then pad centered
+    # force_original_aspect_ratio=decrease ensures the scaled image fits inside the 1080x1920 box
+    vfilter = (
+        "scale=1080:1920:force_original_aspect_ratio=decrease,"
+        "pad=1080:1920:(1080-iw)/2:(1920-ih)/2,setsar=1"
+    )
+
+    cmd = (
+        f'ffmpeg -y -i "{input_video}" -i "{mixed_audio}" -map 0:v -map 1:a '
+        f'-c:v libx264 -preset fast -crf 20 -vf "{vfilter}" '
+        f'-c:a aac -b:a 192k -shortest "{out_mp4}"'
+    )
+    run(cmd)
+
+
+def render_from_image(image_path: Path, mixed_audio: Path, out_mp4: Path, target_sec: float):
+    # create a 1080x1920 image (either scale or pad) and loop it
+    cmd = f'ffmpeg -y -loop 1 -i "{image_path}" -i "{mixed_audio}" -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2" -c:v libx264 -preset fast -crf 20 -t {target_sec:.3f} -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "{out_mp4}"'
+    run(cmd)
+
+# ---------- main pipeline ----------
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", dest="input_video", help="input video (optional). If omitted, a fallback image is used.")
+    parser.add_argument("--topic", help="topic text (used to generate script if input has no audio/script).")
+    parser.add_argument("--out", default="shorts", help="output root dir")
+    parser.add_argument("--background", default="background.mp3")
+    parser.add_argument("--whoosh", default="whoosh.wav")
+    parser.add_argument("--ending", default="ending.mp3")
+    parser.add_argument("--whoosh-lead", type=float, default=0.12, help="how many seconds before sentence start to trigger whoosh")
+    parser.add_argument("--silence-between", type=float, default=0.12, help="silence between sentences")
+    parser.add_argument("--target-sec", type=float, default=0.0, help="override target seconds (0 = use input duration or voice length)")
+    args = parser.parse_args()
+
+    tmpdir = Path(tempfile.mkdtemp(prefix="shorttmp_"))
+    print("Temp dir:", tmpdir)
+    tmpdir.mkdir(parents=True, exist_ok=True)
+
+    # 1) get topic/script
+    if args.topic:
+        topic = args.topic
+    elif args.input_video:
+        # try to derive topic from filename
+        topic = Path(args.input_video).stem.replace("_", " ").replace("-", " ")
+    else:
+        topic = "Short update"
+
+    script = generate_script_for_topic(topic)
+    print("Script:", script)
+
+    # 2) split into sentences
+    sentences = split_sentences(script)
+    print("Sentences:", sentences)
+
+    # 3) produce per-sentence TTS wavs
+    sent_wavs = generate_sentence_audios(sentences, tmpdir)
+
+    # 4) generate short silence file
+    sil = make_silence(tmpdir, dur=args.silence_between)
+
+    # 5) build concatenation order: sent0, sil, sent1, sil, ...
+    concat_inputs = []
+    for i, s in enumerate(sent_wavs):
+        concat_inputs.append(s)
+        if i != len(sent_wavs) - 1:
+            concat_inputs.append(sil)
+    voice_full = tmpdir / "voice_full.wav"
+    concat_audio_files(concat_inputs, voice_full, tmpdir)
+
+    # decide final duration: input video duration or voice_full duration if no input
+    if args.input_video:
+        base_dur = ffprobe_duration(Path(args.input_video))
+    else:
+        base_dur = ffprobe_duration(voice_full)
+    if args.target_sec > 0:
+        duration = args.target_sec
+    else:
+        duration = base_dur
+    print(f"Target duration = {duration:.3f}s")
+
+    # 6) compute sentence start times by probing each piece
+    starts = []
+    cur = 0.0
+    for i, s in enumerate(sent_wavs):
+        starts.append(cur)
+        dur = ffprobe_duration(s)
+        cur += dur
+        if i != len(sent_wavs) - 1:
+            cur += args.silence_between
+
+    # 7) create whoosh placements
+    whoosh_path = Path(args.whoosh)
+    whoosh_placed = place_whooshes_before_starts(whoosh_path, starts, lead=args.whoosh_lead, tmpdir=tmpdir) if whoosh_path.exists() else []
+    # mix all whooshes into one track (or silence if none)
+    if whoosh_placed:
+        whoosh_combined = tmpdir / "whooshes_all.wav"
+        mix_inputs = " ".join(f'-i "{p}"' for p in whoosh_placed)
+        n = len(whoosh_placed)
+        concat_tag = "".join(f'[{i}:a]' for i in range(n))
+        # Just amix them to a single track
+        run(f'ffmpeg -y {mix_inputs} -filter_complex "{concat_tag}amix=inputs={n}:duration=longest:dropout_transition=0[aout]" -map "[aout]" -ar 44100 -ac 2 "{whoosh_combined}"')
+    else:
+        # silent whoosh
+        whoosh_combined = tmpdir / "whooshes_all.wav"
+        run(f'ffmpeg -y -f lavfi -i anullsrc=cl=stereo:r=44100 -t {duration:.3f} -ar 44100 -ac 2 "{whoosh_combined}"')
+
+    # 8) place ending so it ends at video end
+    ending_placed = place_ending(Path(args.ending), duration, tmpdir) if Path(args.ending).exists() else tmpdir / "ending_placed.wav"
+    if not ending_placed.exists():
+        run(f'ffmpeg -y -f lavfi -i anullsrc=cl=stereo:r=44100 -t {duration:.3f} -ar 44100 -ac 2 "{ending_placed}"')
+
+    # 9) combine voice_full + whoosh_all + ending_placed -> voice_with_sfx
+    voice_with_sfx = tmpdir / "voice_with_sfx.wav"
+    mix_tracks = [voice_full, whoosh_combined, ending_placed]
+    # use our concat-like amix helper via filter_complex (not concat)
+    inp_args = " ".join(f'-i "{p}"' for p in mix_tracks)
+    n = len(mix_tracks)
+    tags = "".join(f'[{i}:a]' for i in range(n))
+    run(f'ffmpeg -y {inp_args} -filter_complex "{tags}amix=inputs={n}:duration=first:dropout_transition=2[aout]" -map "[aout]" -ar 44100 -ac 2 "{voice_with_sfx}"')
+
+    # 10) prepare bed loop
+    bed = tmpdir / "bed_loop.wav"
+    make_bed_loop(Path(args.background), duration, bed, vol=0.15)
+
+    # 11) duck bed while voice plays & mix -> final_audio.wav
+    final_audio = tmpdir / "final_audio.wav"
+    mix_with_ducking(bed, voice_with_sfx, final_audio)
+
+    # 12) attach final_audio to video or image fallback -> final mp4
+    outroot = Path(args.out)
+    outroot.mkdir(parents=True, exist_ok=True)
+    tstamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    nice_name = slugify(topic)
+    out_file = outroot / f"{tstamp}-{nice_name}.mp4"
+
+    if args.input_video:
+        # If input is not vertical, center-crop/scale to 1080x1920 with filter in render_final_video
+        render_final_video(Path(args.input_video), final_audio, out_file, duration)
+    else:
+        # fallback image generated from topic text: create a basic image
+        from PIL import Image, ImageDraw, ImageFont
+        img = Image.new("RGB", (1080, 1920), (18,18,22))
+        d = ImageDraw.Draw(img)
+        fnt_path = None
+        # try to find a system font
+        for p in [r"C:\Windows\Fonts\arialbd.ttf", r"C:\Windows\Fonts\Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]:
+            if Path(p).exists():
+                fnt_path = p
+                break
+        if fnt_path:
+            font = ImageFont.truetype(fnt_path, 70)
+        else:
+            font = ImageFont.load_default()
+        # draw text
+        lines = [topic[i:i+28] for i in range(0, min(200,len(topic)), 28)]
+        y = 300
+        for L in lines:
+            w,h = d.textsize(L, font=font)
+            d.text(((1080-w)//2, y), L, font=font, fill=(255,255,255))
+            y += h+10
+        img_path = tmpdir / "fallback.png"
+        img.save(img_path)
+        render_from_image(img_path, final_audio, out_file, duration)
+
+    print("OUTPUT:", out_file)
+    print("TEMP DIR (keep for debug):", tmpdir)
+    print("DONE")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,8 @@
+﻿1
+00:00:00,000 --> 00:00:08,000
+topic : Anong Meron Willca original :
+ANONG MERON WILLCA position : 5 source :
+ol.trend-card__list li a score : 7 spike
+: 0 interest : 0 velocityScore : 0
+final_pre_tune : 7 tuned_score : 7
+

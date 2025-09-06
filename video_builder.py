@@ -1,0 +1,532 @@
+# video_builder.py
+# Robust video builder with Pillow compatibility shim and local-fallback clips.
+# --- INSERTED: write_with_overlay helper (safe, top-level) ---
+
+
+
+import pil_compat
+import pil_compat
+import pil_compat
+import os
+import pil_compat
+import sys
+import pil_compat
+import json
+import pil_compat
+import glob
+import pil_compat   # must appear before moviepy uses PIL constants
+import pil_compat
+from text_overlay import make_text_clip
+import pil_compat
+import random
+import pil_compat
+import requests
+import pil_compat
+from pathlib import Path
+import pil_compat
+import pil_compat
+from text_overlay import make_text_clip
+import pil_compat
+from moviepy.editor import CompositeVideoClip
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, concatenate_videoclips
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+from PIL import Image
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+from text_overlay import make_text_clip
+import pil_compat
+from moviepy.editor import CompositeVideoClip
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import numpy as _np
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+from moviepy.editor import ImageClip
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+import pil_compat
+
+def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="aac", **kwargs):
+    """
+    Composite a robust text overlay (ImageMagick -> Pillow fallback) then write the clip.
+    This helper MUST be defined before any call to write_with_overlay at runtime.
+    """
+    _headline = globals().get("topic") or globals().get("headline") or globals().get("chosen_topic") or "Top Trend"
+    try:
+        txt = make_text_clip(str(_headline),
+                             fontsize=80,
+                             color="white",
+                             size=getattr(clip, "size", (1080,1920)),
+                             duration=min(5, getattr(clip, "duration", 5)))
+        txt = txt.set_position(("center", "center"))
+        # ensure clip has a duration set
+        dur = getattr(clip, "duration", None) or getattr(clip, "duration", 5)
+        clip = CompositeVideoClip([clip, txt]).set_duration(dur)
+    except Exception as e:
+        print("[video_builder] write_with_overlay: make_text_clip failed:", e, flush=True)
+
+    fps_final = fps or getattr(clip, "fps", 25)
+    print(f"[video_builder] write_with_overlay: writing {filename} with headline: {_headline}", flush=True)
+    write_with_overlay(clip, filename, fps=fps_final, codec=codec, audio_codec=audio_codec, **kwargs)
+# --- end inserted helper ---
+
+# MoviePy imports
+
+# Pillow compatibility shim (fixes "module 'PIL.Image' has no attribute 'ANTIALIAS'")
+try:
+    if not hasattr(Image, "ANTIALIAS"):
+        if hasattr(Image, "Resampling"):
+            Image.Resampling.LANCZOS = Image.Resampling.LANCZOS
+        elif hasattr(Image, "LANCZOS"):
+            Image.Resampling.LANCZOS = Image.LANCZOS
+except Exception:
+    # If Pillow not present, later imports will fail â€” let them fail with clear traceback
+    pass
+
+# --- Config ---
+PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")  # optional
+STOCK_DIR = Path.cwd() / "stock_clips"
+OUT_FILE = "autonomous_video.mp4"
+
+# --- Helpers ---
+def log(msg):
+    print(f"[video_builder] {msg}", flush=True)
+
+def parse_input_arg(arg):
+    """Accept server-style JSON or plain string topic."""
+    if not arg:
+        return None
+    # try parse JSON
+    try:
+        data = json.loads(arg)
+        # server uses {"trends": ["Topic", ...]}
+        if isinstance(data, dict) and "trends" in data and data["trends"]:
+            return data["trends"][0]
+        # fallback: if JSON is list or dict with topic
+        if isinstance(data, str):
+            return data
+    except Exception:
+        # treat arg as raw topic string
+        return arg
+    return None
+
+def get_stock_videos_pexels(query, max_results=3):
+    if not PEXELS_API_KEY:
+        return []
+    headers = {"Authorization": PEXELS_API_KEY}
+    url = f"https://api.pexels.com/videos/search?query={requests.utils.quote(query)}&per_page={max_results}"
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        vids = data.get("videos", []) or []
+        urls = []
+        for v in vids:
+            files = v.get("video_files") or []
+            if files:
+                # choose the first available mp4 link
+                link = files[0].get("link")
+                if link:
+                    urls.append(link)
+        return urls
+    except requests.HTTPError as e:
+        log(f"pexels fetch failed: {e}")
+        return []
+    except Exception as e:
+        log(f"pexels fetch error: {e}")
+        return []
+
+def get_stock_videos_local(query, max_results=3):
+    # return a list of local file paths (strings)
+    files = list(STOCK_DIR.glob("*.mp4")) + list(STOCK_DIR.glob("*.mov"))
+    if not files:
+        return []
+    random.shuffle(files)
+    picked = files[:max_results]
+    return [str(p) for p in picked]
+
+def download_if_needed(src, dest):
+    # if src looks like a URL, download to dest (overwrite)
+    if src.startswith("http://") or src.startswith("https://"):
+        log(f"downloading {src} -> {dest}")
+        r = requests.get(src, stream=True, timeout=30)
+        r.raise_for_status()
+        with open(dest, "wb") as fh:
+            for chunk in r.iter_content(1024*8):
+                fh.write(chunk)
+        return dest
+    else:
+        # local file, return existing path
+        return src
+
+def build_video_from_trend(topic):
+    log(f"building video for topic: {topic}")
+    # generate very simple script lines - one line per clip
+    # If you have generate_script, you can import and call it here.
+    text_lines = [topic]  # single-line short caption
+    max_clips = max(1, len(text_lines))
+
+    # Try Pexels -> local fallback
+    urls = get_stock_videos_pexels(topic, max_results=max_clips)
+    if not urls:
+        log("no pexels results, trying local stock_clips fallback")
+        urls = get_stock_videos_local(topic, max_results=max_clips)
+
+    if not urls:
+        raise Exception(f"No stock footage found for query: {topic}")
+
+    clips = []
+    for i, (line, src) in enumerate(zip(text_lines, urls)):
+        local_src = src
+        # if url is remote, download to temp inside stock_clips
+        if src.startswith("http://") or src.startswith("https://"):
+            Path("stock_clips").mkdir(parents=True, exist_ok=True)
+            dest = STOCK_DIR / f"dl_clip_{i}.mp4"
+            local_src = download_if_needed(src, str(dest))
+
+        # load, subclip, resize to vertical 1080x1920 (match your mobile format)
+        log(f"loading clip {local_src}")
+        video = VideoFileClip(local_src)
+        # ensure clip at least 3 seconds
+        dur = min(5, video.duration) if video.duration else 5
+        try:
+            v = video.subclip(0, dur).resize((1080, 1920))
+        except Exception:
+            # If resize fails, keep original size but center crop/pad could be added
+            v = video.subclip(0, dur)
+        # create text overlay (TextClip uses ImageMagick; if ImageMagick not present, may raise)
+        try:
+            txt = TextClip(line, fontsize=60, color="white", size=v.size, method="caption")
+            txt = txt.set_duration(v.duration).set_position(("center", "bottom"))
+            composed = CompositeVideoClip([v, txt])
+        except Exception as e:
+            log(f"TextClip failed (fallback to plain clip): {e}")
+            composed = v
+        clips.append(composed)
+
+    final = concatenate_videoclips(clips, method="compose")
+    write_with_overlay(final, OUT_FILE, codec="libx264", audio_codec="aac")
+    return OUT_FILE
+
+# --- CLI entry ---
+def main():
+    arg = None
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+    topic = parse_input_arg(arg) or "Top Trend"
+    log(f"chosen topic: {topic}")
+    try:
+        out = build_video_from_trend(topic)
+        print(json.dumps({"ok": True, "out": str(Path(out).resolve())}))
+    except Exception as e:
+        log(f"ERROR: {e}")
+        print(json.dumps({"ok": False, "error": str(e)}))
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+# --- APPENDED: write_with_overlay helper (safe, cached, no-recursion) ---
+
+# simple in-process cache for overlays: {(size, headline): ImageClip/TextClip}
+try:
+    _WRITE_OVERLAY_CACHE
+except NameError:
+    _WRITE_OVERLAY_CACHE = {}
+
+def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="aac", overlay_duration=5, **kwargs):
+    """
+    Composite a cached text overlay (ImageMagick -> Pillow fallback) and write the clip.
+    Uses class method CompositeVideoClip.write_videofile to avoid accidental recursion
+    if other code replaced instance methods.
+    """
+    global _WRITE_OVERLAY_CACHE
+    _headline = globals().get("topic") or globals().get("headline") or globals().get("chosen_topic") or "Top Trend"
+    try:
+        size = tuple(getattr(clip, "size", (1080,1920)))
+        dur = min(overlay_duration, float(getattr(clip, "duration", overlay_duration)))
+        cache_key = (size, str(_headline))
+
+        # reuse if available
+        if cache_key in _WRITE_OVERLAY_CACHE:
+            txt_clip = _WRITE_OVERLAY_CACHE[cache_key].set_duration(dur)
+        else:
+            try:
+                txt_clip = make_text_clip(str(_headline), fontsize=80, color="white", size=size, duration=dur)
+                # ensure ImageClip arrays are in uint8 if they expose img as array
+                try:
+                    # if the clip is an ImageClip with .img attribute, convert dtype
+                    if hasattr(txt_clip, "img") and isinstance(txt_clip.img, (list, tuple))==False:
+                        arr = _np.array(txt_clip.img)
+                        if arr.dtype != _np.uint8:
+                            arr = arr.astype(_np.uint8, copy=False)
+                            txt_clip = ImageClip(arr).set_duration(dur)
+                except Exception:
+                    pass
+                _WRITE_OVERLAY_CACHE[cache_key] = txt_clip
+            except Exception as e:
+                print("[video_builder] write_with_overlay: make_text_clip failed:", e, flush=True)
+                txt_clip = None
+
+        # Compose (if we have a text clip)
+        if txt_clip is not None:
+            comp = CompositeVideoClip([clip, txt_clip.set_position(("center", "center"))]).set_duration(getattr(clip, "duration", dur))
+        else:
+            comp = clip  # fallback: write plain clip
+
+    except Exception as exc:
+        print("[video_builder] write_with_overlay: unexpected error:", exc, flush=True)
+        comp = clip
+
+    fps_final = fps or getattr(comp, "fps", getattr(clip, "fps", 25))
+    print(f"[video_builder] write_with_overlay: writing {filename} with headline: {_headline}", flush=True)
+
+    # IMPORTANT: call the class method to avoid a replaced instance attribute causing recursion
+    CompositeVideoClip.write_videofile(comp, filename, fps=fps_final, codec=codec, audio_codec=audio_codec, **kwargs)
+# --- end appended helper ---

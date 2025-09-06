@@ -1,0 +1,101 @@
+﻿"id","theme","background","audio","srt","box_width","box_alpha"
+"01","topic          : Google
+original       : #Google
+position       : 1
+source         : ol.trend-card__list li a
+score          : 11
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 11
+tuned_score    : 11","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_01/trend_01.silent.m4a","C:/auto_video_agent/tmp/trend_01/trend_01.wrapped.srt","760","0.35"
+"02","topic          : Day1
+original       : #乃木坂全国ツアー東京Day1
+position       : 2
+source         : ol.trend-card__list li a
+score          : 10
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 10
+tuned_score    : 10","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_02/trend_02.silent.m4a","C:/auto_video_agent/tmp/trend_02/trend_02.wrapped.srt","760","0.35"
+"03","topic          : Stand FOR Nani
+original       : STAND FOR NANI
+position       : 3
+source         : ol.trend-card__list li a
+score          : 9
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 9
+tuned_score    : 9","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_03/trend_03.silent.m4a","C:/auto_video_agent/tmp/trend_03/trend_03.wrapped.srt","760","0.35"
+"04","topic          : Thomaskong IN Seoul FSW
+original       : THOMASKONG IN SEOUL FSW
+position       : 4
+source         : ol.trend-card__list li a
+score          : 8
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 8
+tuned_score    : 8","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_04/trend_04.silent.m4a","C:/auto_video_agent/tmp/trend_04/trend_04.wrapped.srt","760","0.35"
+"05","topic          : Anong Meron Willca
+original       : ANONG MERON WILLCA
+position       : 5
+source         : ol.trend-card__list li a
+score          : 7
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 7
+tuned_score    : 7","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_05/trend_05.silent.m4a","C:/auto_video_agent/tmp/trend_05/trend_05.wrapped.srt","760","0.35"
+"06","topic          : Juanma Casta O
+original       : Juanma Castaño
+position       : 6
+source         : ol.trend-card__list li a
+score          : 6
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 6
+tuned_score    : 6","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_06/trend_06.silent.m4a","C:/auto_video_agent/tmp/trend_06/trend_06.wrapped.srt","760","0.35"
+"07","topic          : Te Kilat M Za
+original       : Teşkilatımıza
+position       : 7
+source         : ol.trend-card__list li a
+score          : 5
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 5
+tuned_score    : 5","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_07/trend_07.silent.m4a","C:/auto_video_agent/tmp/trend_07/trend_07.wrapped.srt","760","0.35"
+"08","topic          : Dustbialways Cares
+original       : DUSTBIAlways CARES
+position       : 8
+source         : ol.trend-card__list li a
+score          : 4
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 4
+tuned_score    : 4","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_08/trend_08.silent.m4a","C:/auto_video_agent/tmp/trend_08/trend_08.wrapped.srt","760","0.35"
+"09","topic          : Tunisie
+original       : Tunisie
+position       : 9
+source         : ol.trend-card__list li a
+score          : 3
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 3
+tuned_score    : 3","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_09/trend_09.silent.m4a","C:/auto_video_agent/tmp/trend_09/trend_09.wrapped.srt","760","0.35"
+"10","topic          : Tsue
+original       : TSUE
+position       : 10
+source         : ol.trend-card__list li a
+score          : 2
+spike          : 0
+interest       : 0
+velocityScore  : 0
+final_pre_tune : 2
+tuned_score    : 2","C:/auto_video_agent/background.jpg","C:/auto_video_agent/tmp/trend_10/trend_10.silent.m4a","C:/auto_video_agent/tmp/trend_10/trend_10.wrapped.srt","760","0.35"

@@ -1,0 +1,8 @@
+﻿1
+00:00:00,000 --> 00:00:08,000
+topic : Te Kilat M Za original :
+Teşkilatımıza position : 7 source :
+ol.trend-card__list li a score : 5 spike
+: 0 interest : 0 velocityScore : 0
+final_pre_tune : 5 tuned_score : 5
+
