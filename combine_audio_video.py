@@ -1,4 +1,5 @@
-from moviepy.editor import VideoFileClip, AudioFileClip
+from moviepy.editor import AudioFileClip, VideoFileClip
+
 
 def replace_audio(video_path, audio_path, output_path):
     video = VideoFileClip(video_path)

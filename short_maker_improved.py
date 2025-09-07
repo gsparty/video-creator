@@ -10,14 +10,14 @@ Autonomous short generator (improved):
 Usage:
   python short_maker_improved.py --topic "Huge football upset..." --sec 25
 """
-import os
 import subprocess
 import textwrap
 from pathlib import Path
 from typing import Optional
+
 from PIL import Image, ImageDraw, ImageFont
 
-from sound_selector import select_bed, select_sfx
+from sound_selector import select_bed
 
 ROOT = Path.cwd()
 ASSETS_DIR = ROOT / "assets"

@@ -1,6 +1,7 @@
 import librosa
-import soundfile as sf
 import numpy as np
+import soundfile as sf
+
 
 def clean_audio(input_path: str, output_path: str):
     # Load audio

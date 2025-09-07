@@ -8,8 +8,8 @@ Optional: if OPENAI_API_KEY is set and `openai` is installed, will try to use it
 """
 
 import os
-import textwrap
 import sys
+import textwrap
 
 OPENAI_KEY = os.environ.get("OPENAI_API_KEY")
 

@@ -1,7 +1,10 @@
 # tts_batch.py
 # Usage: python tts_batch.py outputs_dir
-import sys, os, glob, pathlib
+import pathlib
+import sys
+
 from gtts import gTTS
+
 
 def find_script_for_video(video_path):
     p = pathlib.Path(video_path)

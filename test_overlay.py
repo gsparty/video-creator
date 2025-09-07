@@ -1,6 +1,4 @@
-﻿import sys
-# ensure we use the same ImageMagick config you added earlier
-import config_imagemagick
+﻿# ensure we use the same ImageMagick config you added earlier
 
 # import helper
 import text_overlay
@@ -23,7 +21,9 @@ try:
     if not saved:
         # If clip has .img (ImageClip), save with Pillow
         try:
-            import numpy as np, imageio, PIL.Image as Image
+            import imageio
+            import numpy as np
+            import PIL.Image as Image
             if hasattr(clip, "img"):
                 arr = np.array(clip.img).astype("uint8")
                 Image.fromarray(arr).save("debug_txt_img.png")
@@ -34,7 +34,8 @@ try:
     if not saved:
         # fallback: get a frame via get_frame(0)
         try:
-            import numpy as _np, imageio
+            import imageio
+            import numpy as _np
             arr = clip.get_frame(0)
             # ensure uint8
             arr = (_np.clip(arr, 0, 255)).astype(_np.uint8)

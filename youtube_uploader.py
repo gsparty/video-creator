@@ -1,59 +1,83 @@
+"""youtube_uploader.py
+
+Lightweight, flake8-friendly YouTube uploader helper using a service
+account. Replace CONFIG values and call upload_video(...) as needed.
+"""
+from __future__ import annotations
+
+import argparse
 import os
-import json
-from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
+
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 
-from config import TOKENS_DIR, YOUTUBE_CLIENT_SECRETS, YOUTUBE_CATEGORY_ID, YOUTUBE_DEFAULT_VISIBILITY
+# Minimal OAuth scopes for YouTube Data API v3.
+YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
-TOKEN_PATH = Path(TOKENS_DIR) / "youtube_token.json"
 
-def _get_youtube() -> "googleapiclient.discovery.Resource":
-    creds = None
-    if TOKEN_PATH.exists():
-        creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(YOUTUBE_CLIENT_SECRETS, SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open(TOKEN_PATH, "w") as f:
-            f.write(creds.to_json())
-    return build("youtube", "v3", credentials=creds)
+def get_authenticated_service(
+    sa_json_path: str, scopes: Optional[Iterable[str]] = None
+):
+    """Return an authenticated YouTube API client using a service account."""
+    if scopes is None:
+        scopes = YOUTUBE_SCOPES
+    credentials = Credentials.from_service_account_file(sa_json_path, scopes=list(scopes))
+    youtube = build("youtube", "v3", credentials=credentials, cache_discovery=False)
+    return youtube
 
-def upload_short(
-    filepath: str, title: str, description: str,
-    tags: Optional[list]=None, visibility: str = None
-) -> str:
-    """
-    Uploads a video and returns the YouTube watch URL.
-    """
-    youtube = _get_youtube()
-    visibility = visibility or YOUTUBE_DEFAULT_VISIBILITY
+
+def upload_video(
+    youtube,
+    video_file: str,
+    title: str,
+    description: str = "",
+    tags: Optional[Iterable[str]] = None,
+    privacy: str = "public",
+):
+    """Upload a single video file and return the upload response."""
     body = {
         "snippet": {
             "title": title[:100],
-            "description": description[:4900],
-            "categoryId": YOUTUBE_CATEGORY_ID,
-            "tags": tags or []
+            "description": description,
+            "tags": list(tags)[:50] if tags else [],
+            "categoryId": "22",  # People & Blogs, change if desired
         },
-        "status": {"privacyStatus": visibility},
+        "status": {"privacyStatus": privacy},
     }
-    media = MediaFileUpload(filepath, chunksize=-1, resumable=True)
 
-    request = youtube.videos().insert(
-        part="snippet,status",
-        body=body,
-        media_body=media
-    )
+    media = MediaFileUpload(video_file, chunksize=-1, resumable=True)
+    request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+
     response = None
+    # Simple resumable upload loop (no backoff logic here; add as needed).
     while response is None:
         status, response = request.next_chunk()
-    vid = response["id"]
-    return f"https://www.youtube.com/watch?v={vid}"
+        if status:
+            print(f"Upload progress: {int(status.progress() * 100)}%")
+
+    return response
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Upload video to YouTube.")
+    parser.add_argument("--sa-json", required=True, help="Path to service account JSON.")
+    parser.add_argument("--file", required=True, help="Local video file path.")
+    parser.add_argument("--title", required=True, help="Video title.")
+    parser.add_argument("--desc", default="", help="Video description.")
+    parser.add_argument("--privacy", default="public", help="privacy: public|unlisted|private")
+    args = parser.parse_args()
+
+    if not os.path.exists(args.sa_json):
+        raise SystemExit(f"Service account JSON not found: {args.sa_json}")
+
+    youtube = get_authenticated_service(args.sa_json)
+    resp = upload_video(
+        youtube, args.file, args.title, description=args.desc, privacy=args.privacy
+    )
+    print("Upload finished. Video id:", resp.get("id"))
+
+
+if __name__ == "__main__":
+    main()

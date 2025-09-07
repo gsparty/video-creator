@@ -1,6 +1,8 @@
 # overlay_all.py
 # Usage: python overlay_all.py outputs_dir
-import sys, subprocess, pathlib, shlex, os
+import pathlib
+import subprocess
+import sys
 
 PYTHON_EXE = None  # leave None to use system 'python' command; set to venv path if desired
 

@@ -11,8 +11,10 @@ No pydub used (avoids audioop issues). Uses moviepy only.
 
 import argparse
 from pathlib import Path
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
+
 import moviepy.audio.fx.all as afx
+from moviepy.editor import AudioFileClip, CompositeAudioClip, VideoFileClip
+
 
 def build_short(
     input_video: Path,

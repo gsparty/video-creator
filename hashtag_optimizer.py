@@ -1,20 +1,20 @@
 # hashtag_optimizer.py
 import csv
 import re
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
 
-from config import GOOGLE_SERVICE_ACCOUNT_JSON, SHEET_ID, SHEET_NAME, TOKENS_DIR
+from config import (GOOGLE_SERVICE_ACCOUNT_JSON, SHEET_ID, SHEET_NAME,
+                    TOKENS_DIR)
 
-import re
-import sys
 
 # Simple hashtag optimizer
 def optimize_hashtags(text: str, max_tags: int = 8):

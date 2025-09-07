@@ -1,5 +1,5 @@
-﻿import config_imagemagick
-from moviepy.editor import VideoFileClip, CompositeVideoClip
+﻿from moviepy.editor import CompositeVideoClip, VideoFileClip
+
 from text_overlay import make_text_clip
 
 in_path = "stock_clips/test1.mp4"

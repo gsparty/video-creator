@@ -1,6 +1,7 @@
 # repair_files.py — safe in-place repairs for BOM / stray-import / missing-body issues
-import io, sys, re
+import re
 from pathlib import Path
+
 ROOT = Path.cwd()
 
 def backup(path: Path):

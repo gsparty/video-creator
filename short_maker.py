@@ -10,16 +10,14 @@ Features:
 """
 
 from __future__ import annotations
-import os
-import sys
-import subprocess
+
 import asyncio
 import logging
-import uuid
-import shutil
 import math
-import textwrap
-from typing import Optional, List, Tuple
+import os
+import subprocess
+import uuid
+from typing import List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -97,7 +95,6 @@ def build_ssml_for_topic(topic: str, voice_name: str = DEFAULT_VOICE, style: str
 # ----- TTS handling -----
 def edge_tts_available() -> bool:
     try:
-        import edge_tts  # type: ignore
         return True
     except Exception:
         return False
@@ -105,6 +102,7 @@ def edge_tts_available() -> bool:
 
 async def _edge_tts_save(ssml: str, out_wav: str, voice: str = DEFAULT_VOICE):
     import edge_tts  # type: ignore
+
     # edge_tts.Communicate(text, voice=voice).save(path)
     com = edge_tts.Communicate(ssml, voice=voice)
     await com.save(out_wav)

@@ -5,11 +5,10 @@
 #   predict_label(text) -> label (str)
 #   train_from_csv(csv_path) -> trains and overwrites model (csv: text,label)
 
-import os
 from pathlib import Path
 from typing import List
-import joblib
 
+import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline

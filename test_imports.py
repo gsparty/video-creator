@@ -1,11 +1,10 @@
 import sys
 
 try:
-    import moviepy
-    import moviepy.editor as m
-    from PIL import Image
-    import requests
     import flask
+    import moviepy
+    import requests
+    from PIL import Image
 
     print("IMPORTS OK")
     print("moviepy version:", moviepy.__version__)

@@ -1,5 +1,7 @@
 # test_overlay_watch.py
-import time, sys, os
+import os
+import sys
+import time
 from multiprocessing import Process, Queue
 
 TIMEOUT = 30  # seconds
@@ -16,7 +18,6 @@ def child_make(q):
         print("child: clip created, trying to save frame", flush=True)
 
         # try save_frame if present, else get_frame+imageio
-        saved = False
         try:
             if hasattr(clip, "save_frame"):
                 clip.save_frame("debug_child_saveframe.png", t=0)
@@ -28,7 +29,8 @@ def child_make(q):
         try:
             arr = clip.get_frame(0)
             # lazy import imageio to write
-            import imageio, numpy as _np
+            import imageio
+            import numpy as _np
             arr = (_np.clip(arr, 0, 255)).astype(_np.uint8)
             imageio.imwrite("debug_child_getframe.png", arr)
             q.put(("OK", "get_frame"))

@@ -4,7 +4,9 @@ Batch assemble: for every topic index in outputs/ (NN_Title.mp4),
 look for stock/<safe-topic>/ . If clips exist, call assemble_video.py to create
 <NN>_..._enhanced.mp4. Otherwise fallback to placeholder base mp4.
 """
-import subprocess, pathlib, sys, re, os
+import pathlib
+import subprocess
+import sys
 
 ROOT = pathlib.Path(".").resolve()
 OUT = ROOT / "outputs"
@@ -32,7 +34,7 @@ def main():
     summary = []
     for mp in mp4s:
         topic = safe_topic_from_filename(mp.name)
-        idx = mp.name.split("_",1)[0]
+        mp.name.split("_",1)[0]
         print("Processing:", mp.name)
         # audio and overlay naming conventions used in your outputs
         audio = OUT / f"{mp.stem}.tts.mp3"

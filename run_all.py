@@ -4,11 +4,13 @@ Run the video_builder for multiple topics (generate N videos).
 If GOOGLE_OAUTH_CLIENT_SECRETS (client_secrets.json) exists and you consent, uploads to YouTube using upload_youtube.py.
 """
 
-import os, sys, json, subprocess, shutil
-from pathlib import Path
 import argparse
-import time
-import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
 
 ROOT = Path.cwd()
 OUT_DIR = ROOT / "outputs"

@@ -1,6 +1,12 @@
 # pexels_fetch.py
 # pip: you already have requests via gTTS install; otherwise `pip install requests`
-import os, requests, pathlib, sys, time, urllib.parse
+import os
+import pathlib
+import sys
+import time
+import urllib.parse
+
+import requests
 
 API_KEY = os.environ.get("PEXELS_API_KEY", "")  # set env var first
 if not API_KEY:

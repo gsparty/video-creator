@@ -1,5 +1,6 @@
 # config_imagemagick.py
 import os
+
 import moviepy.config as mpc
 
 # Update this path if your ImageMagick install changes

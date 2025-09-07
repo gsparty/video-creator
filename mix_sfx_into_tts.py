@@ -2,7 +2,9 @@
 # Usage: python mix_sfx_into_tts.py <basename> <sfx_file>
 # Example: python mix_sfx_into_tts.py 02_3-second-kitchen-trick sfx_click.mp3
 
-import sys, os, subprocess
+import os
+import subprocess
+import sys
 
 if len(sys.argv) < 2:
     print("Usage: python mix_sfx_into_tts.py <basename> <sfx_file (optional)>")

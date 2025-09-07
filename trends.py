@@ -1,7 +1,10 @@
 # trends.py
-import requests
 from typing import List
+
+import requests
+
 from config import TRENDS_URL
+
 
 def fetch_trends() -> List[str]:
     """

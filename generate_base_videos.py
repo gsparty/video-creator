@@ -1,7 +1,10 @@
 # generate_base_videos.py
 # Creates simple placeholder vertical videos (image -> looped mp4) for a list of topics.
-import sys, subprocess, pathlib, textwrap, os
-from PIL import Image, ImageDraw, ImageFont
+import pathlib
+import subprocess
+import sys
+
+from PIL import Image, ImageDraw
 
 FONT_PATHS = [
     r"C:\Windows\Fonts\arial.ttf",
@@ -54,7 +57,7 @@ def image_to_mp4(imgpath, outmp4, duration=10, fps=25):
     cmd = [
         "ffmpeg", "-y", "-loop", "1", "-i", str(imgpath),
         "-c:v", "libx264", "-t", str(duration), "-pix_fmt", "yuv420p",
-        "-vf", f"scale=1080:1920", "-r", str(fps), str(outmp4)
+        "-vf", "scale=1080:1920", "-r", str(fps), str(outmp4)
     ]
     subprocess.run(cmd, check=True)
 

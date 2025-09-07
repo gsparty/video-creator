@@ -14,12 +14,12 @@ Assumptions:
  - Adjust PYTRENDS/Node host via --server if different.
 """
 
-import requests
-import time
 import argparse
 import logging
 import os
-from pathlib import Path
+import time
+
+import requests
 
 # Import your generate_short function (adjust if your short_maker API differs)
 try:

@@ -1,5 +1,4 @@
 # fix_files.py — one-shot fixer to patch Pillow/MoviePy issues and bad backticks
-import io, os, sys
 from pathlib import Path
 
 ROOT = Path.cwd()

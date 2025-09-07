@@ -1,6 +1,8 @@
 ﻿from moviepy.config import change_settings
+
 # point MoviePy explicitly at your magick.exe (adjust path if different)
 change_settings({"IMAGEMAGICK_BINARY": r"C:\Program Files\ImageMagick-7.1.2-Q16-HDRI\magick.exe"})
 from moviepy.editor import TextClip
+
 t = TextClip("hello world", fontsize=50)   # create a text image - no file written
 print("TextClip OK")

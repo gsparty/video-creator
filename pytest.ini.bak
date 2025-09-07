@@ -1,0 +1,4 @@
+﻿[pytest]
+addopts = -q -k "not pexels"
+filterwarnings =
+    ignore::SyntaxWarning

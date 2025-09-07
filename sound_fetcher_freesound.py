@@ -11,12 +11,13 @@ Usage examples:
 Requirements:
   pip install requests python-dotenv
 """
-import os
-import time
 import argparse
-from pathlib import Path
-import requests
+import os
 import subprocess
+import time
+from pathlib import Path
+
+import requests
 
 # optional: load .env if present
 try:

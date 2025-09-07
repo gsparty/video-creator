@@ -1,6 +1,10 @@
 # assemble_video.py
-import subprocess, pathlib, sys, shutil, os, tempfile
+import shutil
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
+
 
 def run(cmd):
     print("RUN:", " ".join(cmd))

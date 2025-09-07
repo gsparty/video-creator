@@ -1,6 +1,7 @@
-﻿import config_imagemagick   # harmless, ensures moviepy IM settings are loaded
+﻿import imageio
+import numpy as np
+
 from text_overlay import make_text_clip
-import imageio, numpy as np
 
 try:
     c = make_text_clip("DEBUG Overlay ✅", fontsize=140, color="white", size=(1080,1920), duration=2)

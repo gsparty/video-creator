@@ -2,8 +2,11 @@
 # Usage: python create_srt_and_tts.py <basename> --duration 25
 # Example: python create_srt_and_tts.py 02_3-second-kitchen-trick --duration 25
 
-import sys, os, argparse
+import argparse
+import os
+
 from gtts import gTTS
+
 
 def fmt_srt_time(seconds):
     h = int(seconds // 3600)

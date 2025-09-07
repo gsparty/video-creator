@@ -16,8 +16,15 @@ Notes:
  - Requires ffmpeg and edge-tts (optional but preferred) in PATH.
  - Pillow is required for slide generation (pip install Pillow)
 """
-import argparse, json, os, re, subprocess, sys, tempfile, time
+import argparse
+import json
+import re
+import subprocess
+import sys
+import tempfile
+import time
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 # ---- Tweakable params ----

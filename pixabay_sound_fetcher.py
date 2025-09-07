@@ -9,12 +9,13 @@ Notes:
   - Downloads to: assets/sounds/<label>/
 """
 import argparse
-import requests
-from bs4 import BeautifulSoup
-from pathlib import Path
-import time
 import re
 import subprocess
+import time
+from pathlib import Path
+
+import requests
+from bs4 import BeautifulSoup
 
 ROOT = Path.cwd()
 OUT_ROOT = ROOT / "assets" / "sounds"

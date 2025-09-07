@@ -1,13 +1,14 @@
 # server.py - wrapper to run your video_builder from Cloud Run (or locally)
-import os
-import sys
-import tempfile
-import shutil
 import glob
 import json
 import logging
-from flask import Flask, request, jsonify
+import os
+import shutil
+import sys
+import tempfile
+
 import requests
+from flask import Flask, jsonify, request
 
 # Add repo root to path so we can import video_builder from same folder
 ROOT = os.path.dirname(__file__)

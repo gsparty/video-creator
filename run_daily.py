@@ -8,21 +8,20 @@ Usage examples:
     python run_daily.py --count 3 --region CH --only-stage --tts-engine edge-tts --voice-variants "en-US-AriaNeural" --english-only
 """
 
-import os
-import sys
 import argparse
 import logging
-import time
-import json
+import os
 import re
+import sys
+import time
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional
 
 import requests
 
 # try import langdetect for language filtering; if missing we'll fallback to ASCII heuristic
 try:
-    from langdetect import detect_langs, detect
+    from langdetect import detect_langs
     LANGDETECT_AVAILABLE = True
 except Exception:
     LANGDETECT_AVAILABLE = False

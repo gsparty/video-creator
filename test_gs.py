@@ -1,5 +1,8 @@
 
-import requests, os
+import os
+
+import requests
+
 url = os.environ.get("SCRAPER_URL") or "https://us-central1-automate-trends-scraper.cloudfunctions.net/scrapeTrends"
 print("Using URL:", url)
 r = requests.get(url, timeout=15)

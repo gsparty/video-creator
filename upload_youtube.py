@@ -1,9 +1,10 @@
 # upload_youtube.py
-import sys, os
+import os
+import sys
+
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-import pickle
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CRED_PICKLE = "youtube_creds.pkl"

@@ -1,12 +1,12 @@
 ﻿
 
-import pil_compat
 import hashlib
 from pathlib import Path
 from tempfile import gettempdir
-from PIL import Image, ImageDraw, ImageFont
+
 import numpy as np
 from moviepy.editor import ImageClip
+from PIL import Image, ImageDraw, ImageFont
 
 # text_overlay.py â€” file-backed overlay generator (half-res -> cached PNG -> ImageClip)
 

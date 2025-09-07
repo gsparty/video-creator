@@ -28,15 +28,13 @@ Notes:
 """
 
 import argparse
-import subprocess
-import sys
-import re
-import os
 import json
-import shutil
+import re
+import subprocess
 import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 # ---------- Utilities ----------
 def run(cmd, check=True):
@@ -90,6 +88,7 @@ def tts_edge_to_wav(text: str, out_wav: Path, voice="en-US-AriaNeural"):
     """Use edge-tts python package to create a WAV file (44100 stereo PCM)."""
     try:
         import asyncio
+
         import edge_tts
     except Exception as e:
         raise RuntimeError("edge-tts package missing") from e

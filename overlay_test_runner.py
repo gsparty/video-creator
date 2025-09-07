@@ -1,7 +1,8 @@
 ﻿# overlay_test_runner.py - uses the helper to place a text overlay on stock_clips\test1.mp4
-import config_imagemagick   # keep this so MoviePy knows magick path
 from pathlib import Path
-from moviepy.editor import VideoFileClip, CompositeVideoClip
+
+from moviepy.editor import CompositeVideoClip, VideoFileClip
+
 from text_overlay import make_text_clip
 
 in_path = Path("stock_clips") / "test1.mp4"

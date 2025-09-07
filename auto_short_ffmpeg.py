@@ -17,11 +17,10 @@ Behavior:
 """
 
 import subprocess
-import json
-import shlex
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
+
 
 def run(cmd, check=True):
     print("CMD>", cmd)

@@ -1,5 +1,7 @@
 # debug_child.py
-import sys, os
+import os
+import sys
+
 print("child sys.executable:", sys.executable)
 print("child cwd:", os.getcwd())
 print("child sys.path (first 6):", sys.path[:6])

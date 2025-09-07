@@ -1,8 +1,8 @@
 # overlay_png.py
 # Usage: python overlay_png.py "Headline text" out.png width height fontsize
-from PIL import Image, ImageDraw, ImageFont
 import sys
-import os
+
+from PIL import Image, ImageDraw, ImageFont
 
 FONT_PATHS = [
     r"C:\Windows\Fonts\arial.ttf",

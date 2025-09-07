@@ -4,15 +4,14 @@
 #  python sound_fetcher.py --mode beds --keywords "stadium crowd cheer" --label sports
 #  python sound_fetcher.py --mode sfx --keywords "impact whoosh ding" --label sfx
 
-import os
-import re
 import json
-import time
-import requests
+import re
 import subprocess
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from dataclasses import dataclass, asdict
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
+
+import requests
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = ROOT / "assets" / "sounds"

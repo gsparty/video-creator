@@ -1,6 +1,8 @@
 # make_sfx.py
 # Usage: python make_sfx.py sfx_click.mp3
-import sys, subprocess
+import subprocess
+import sys
+
 out = sys.argv[1] if len(sys.argv)>1 else "sfx_click.mp3"
 # short sine burst as a "ping"
 cmd = [

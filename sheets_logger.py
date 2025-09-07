@@ -1,9 +1,11 @@
 # sheets_logger.py (replace or patch)
 import time
+from typing import Dict, Optional
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from typing import Dict, Optional
-from config import GOOGLE_SERVICE_ACCOUNT_JSON, SHEET_NAME, SHEET_ID
+
+from config import GOOGLE_SERVICE_ACCOUNT_JSON, SHEET_ID, SHEET_NAME
 
 _scopes = [
     "https://www.googleapis.com/auth/spreadsheets",

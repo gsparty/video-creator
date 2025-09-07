@@ -13,12 +13,11 @@ Usage (CLI):
   python sound_manager.py mix <voice_wav> <label> <out_mixed.mp3>  (uses default target_sec based on voice)
 """
 
-import subprocess
-import shlex
-import re
-from pathlib import Path
 import json
+import re
+import subprocess
 import sys
+from pathlib import Path
 
 ASSETS_DIR = Path("assets")
 SOUNDS_DIR = ASSETS_DIR / "sounds"

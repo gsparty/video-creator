@@ -8,9 +8,8 @@ Place your sound files in assets/sounds/, e.g.:
   assets/sounds/calm_ambient_loop.mp3
 """
 
-import os
-from pathlib import Path
 import random
+from pathlib import Path
 
 SOUNDS_DIR = Path("assets") / "sounds"
 

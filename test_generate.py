@@ -1,6 +1,7 @@
 # test_generate.py
-from short_maker import generate_short
 import traceback
+
+from short_maker import generate_short
 
 try:
     mp4, parts = generate_short("Alana", region="CH", voice_lang=None)

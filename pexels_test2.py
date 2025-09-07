@@ -1,5 +1,7 @@
 # pexels_test2.py
-import os, requests, json
+import os
+
+import requests
 
 key = os.environ.get("PEXELS_API_KEY")
 print("PEXELS_API_KEY present:", bool(key))

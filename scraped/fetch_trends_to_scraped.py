@@ -7,10 +7,14 @@ Usage:
 
 Saves files like scraped/20250826-153000-<slug>.json
 """
-import argparse, os, json, requests, time
-from pathlib import Path
-from datetime import datetime
+import argparse
+import json
 import re
+from datetime import datetime
+from pathlib import Path
+
+import requests
+
 
 def slugify(s):
     s = s.strip().lower()

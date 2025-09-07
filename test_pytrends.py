@@ -1,6 +1,8 @@
 # test_pytrends.py
-from pytrends.request import TrendReq
 import traceback
+
+from pytrends.request import TrendReq
+
 
 def main():
     try:
