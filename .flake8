@@ -1,5 +1,5 @@
 ﻿[flake8]
-max-line-length = 120
+max-line-length = 88
 exclude =
     .venv,
     venv,
@@ -7,11 +7,11 @@ exclude =
     .venv_old_backup,
     __pycache__,
     .git,
-    migrations
-
-# Per-file temporary ignores so we can iterate. Remove/slowly fix these files later.
+    migrations,
+    outputs,
+    assets,
 per-file-ignores =
-    video_builder.py: E501,E302,E305,F811,F401,F824,E231,E225,E712,E722
-    auto_short_full.py: E501,E231
-    short_maker.py: E501,E231,F401,E722
-    sheets_logger.py: E501,E231
+    video_builder.py: F811,E303,E305,E302,E712,E225,E231,E501,F824
+    auto_short_full.py: E501
+    short_maker.py: E501,E722
+    test_*.py: E402
