@@ -39,9 +39,15 @@ DEFAULT_VOICE = "en-US-AriaNeural"
 def run_cmd(cmd: List[str], capture=False, check=True, env=None):
     LOG.info("CMD> %s", " ".join(cmd))
     if capture:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        res = subprocess.run(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
+        )
         if check and res.returncode != 0:
-            LOG.error("Command failed. stdout:\n%s\nstderr:\n%s", res.stdout.decode(errors="ignore"), res.stderr.decode(errors="ignore"))
+            LOG.error(
+                "Command failed. stdout:\n%s\nstderr:\n%s",
+                res.stdout.decode(errors="ignore"),
+                res.stderr.decode(errors="ignore"),
+            )
             raise RuntimeError(f"Command failed: {cmd}")
         return res.stdout.decode(errors="ignore"), res.stderr.decode(errors="ignore")
     else:
@@ -59,6 +65,7 @@ def safe_mkdir(path: str):
 def slugify(text: str) -> str:
     # basic slug suitable for filenames
     import re
+
     s = text.strip().lower()
     s = re.sub(r"\s+", "-", s)
     s = re.sub(r"[^a-z0-9\-_]", "", s)
@@ -67,12 +74,14 @@ def slugify(text: str) -> str:
     return s[:120]
 
 
-def build_ssml_for_topic(topic: str, voice_name: str = DEFAULT_VOICE, style: str = "newscast-casual") -> str:
+def build_ssml_for_topic(
+    topic: str, voice_name: str = DEFAULT_VOICE, style: str = "newscast-casual"
+) -> str:
     """
     Build expressive SSML for Microsoft neural voices (edge-tts).
     """
     # minimal escape
-    esc = (topic.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+    esc = topic.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     ssml = f"""
 <speak xmlns="http://www.w3.org/2001/10/synthesis"
        xmlns:mstts="https://www.w3.org/2001/mstts"
@@ -123,6 +132,7 @@ def try_gtts_text_to_mp3(text: str, out_mp3: str, lang="en"):
     # lightweight fallback using gTTS
     try:
         from gtts import gTTS
+
         t = gTTS(text, lang=lang)
         tmp = out_mp3 + ".tmp.mp3"
         t.save(tmp)
@@ -139,6 +149,7 @@ def try_gtts_text_to_mp3(text: str, out_mp3: str, lang="en"):
 def try_pyttsx3_text_to_wav(text: str, out_wav: str):
     try:
         import pyttsx3
+
         engine = pyttsx3.init()
         # Windows voices often produce WAV by save_to_file
         engine.save_to_file(text, out_wav)
@@ -152,8 +163,19 @@ def try_pyttsx3_text_to_wav(text: str, out_wav: str):
 
 def get_audio_duration(path: str) -> float:
     try:
-        out, err = run_cmd([FFPROBE, "-v", "error", "-show_entries", "format=duration", "-of",
-                            "default=noprint_wrappers=1:nokey=1", path], capture=True)
+        out, err = run_cmd(
+            [
+                FFPROBE,
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                path,
+            ],
+            capture=True,
+        )
         out = out.strip()
         return float(out)
     except Exception:
@@ -164,18 +186,36 @@ def get_audio_duration(path: str) -> float:
 def flavor_audio_broadcast(in_mp3: str, out_mp3: str):
     # gentle highpass + compressor + small reverb + normalize already applied beforehand
     af = "highpass=f=80,lowpass=f=15000,acompressor=threshold=0.05:ratio=4:attack=5:release=100,aecho=0.0007:0.0009:0.6:0.35"
-    run_cmd([FFMPEG, "-y", "-i", in_mp3, "-af", af, "-ar", "44100", "-ac", "2", out_mp3])
+    run_cmd(
+        [FFMPEG, "-y", "-i", in_mp3, "-af", af, "-ar", "44100", "-ac", "2", out_mp3]
+    )
     return out_mp3
 
 
 def pad_audio_to_duration(in_mp3: str, out_mp3: str, duration: float):
     # pad using apad
-    run_cmd([FFMPEG, "-y", "-i", in_mp3, "-af", f"apad=pad_dur={max(0, duration)}", "-ar", "44100", "-ac", "2", out_mp3])
+    run_cmd(
+        [
+            FFMPEG,
+            "-y",
+            "-i",
+            in_mp3,
+            "-af",
+            f"apad=pad_dur={max(0, duration)}",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            out_mp3,
+        ]
+    )
     return out_mp3
 
 
 # ----- image/slide generation -----
-def wrap_text_to_lines(text: str, draw: ImageDraw.ImageDraw, font: ImageFont.ImageFont, max_w: int) -> List[str]:
+def wrap_text_to_lines(
+    text: str, draw: ImageDraw.ImageDraw, font: ImageFont.ImageFont, max_w: int
+) -> List[str]:
     # robust wrapper: use textbbox for measurement
     words = text.strip().split()
     if not words:
@@ -195,7 +235,9 @@ def wrap_text_to_lines(text: str, draw: ImageDraw.ImageDraw, font: ImageFont.Ima
     return lines
 
 
-def create_slide_png(out_path: str, title: str, width: int = TARGET_W, height: int = TARGET_H):
+def create_slide_png(
+    out_path: str, title: str, width: int = TARGET_W, height: int = TARGET_H
+):
     # simple gradient + centered title + big readable font
     img = Image.new("RGB", (width, height), color=(20, 20, 20))
     draw = ImageDraw.Draw(img)
@@ -213,7 +255,11 @@ def create_slide_png(out_path: str, title: str, width: int = TARGET_W, height: i
     font = None
     try:
         # common fallback fonts:
-        for f in ["arial.ttf", "DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]:
+        for f in [
+            "arial.ttf",
+            "DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        ]:
             try:
                 font = ImageFont.truetype(f, size=72)
                 break
@@ -238,7 +284,10 @@ def create_slide_png(out_path: str, title: str, width: int = TARGET_W, height: i
             lines = wrap_text_to_lines(title, draw, font, max_text_w)
 
     # compute block height
-    line_h = (draw.textbbox((0, 0), "Ay", font=font)[3] - draw.textbbox((0, 0), "Ay", font=font)[1])
+    line_h = (
+        draw.textbbox((0, 0), "Ay", font=font)[3]
+        - draw.textbbox((0, 0), "Ay", font=font)[1]
+    )
     block_h = line_h * len(lines)
     y0 = (height - block_h) // 2
 
@@ -261,7 +310,12 @@ def create_slide_png(out_path: str, title: str, width: int = TARGET_W, height: i
         foot_font = ImageFont.load_default()
     footer = "Watch more • Comment below"
     fbbox = draw.textbbox((0, 0), footer, font=foot_font)
-    draw.text((width - fbbox[2] - 20, height - fbbox[3] - 20), footer, font=foot_font, fill=(220, 220, 220))
+    draw.text(
+        (width - fbbox[2] - 20, height - fbbox[3] - 20),
+        footer,
+        font=foot_font,
+        fill=(220, 220, 220),
+    )
 
     img.save(out_path, format="PNG")
     LOG.info("Saved slide image: %s", out_path)
@@ -269,23 +323,49 @@ def create_slide_png(out_path: str, title: str, width: int = TARGET_W, height: i
 
 
 # ----- final MP4 creation -----
-def create_mp4_from_image_and_audio(image_png: str, audio_mp3: str, out_mp4: str, fps: int = FPS, extra_zoom: float = 0.0009):
+def create_mp4_from_image_and_audio(
+    image_png: str,
+    audio_mp3: str,
+    out_mp4: str,
+    fps: int = FPS,
+    extra_zoom: float = 0.0009,
+):
     # compute duration
     dur = get_audio_duration(audio_mp3)
     frames = max(1, int(math.ceil(dur * fps)))
     # zoompan d value controls frames; ensure integer
     d_val = frames
     # ffmpeg zoompan expects expressions; using the same filter as previous pipeline
-    filter_complex = (
-        f"[0:v]scale={TARGET_W}:{TARGET_H},zoompan=z='zoom+{extra_zoom}':d={d_val}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',fps={fps},format=yuv420p[v]"
-    )
+    filter_complex = f"[0:v]scale={TARGET_W}:{TARGET_H},zoompan=z='zoom+{extra_zoom}':d={d_val}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',fps={fps},format=yuv420p[v]"
     cmd = [
-        FFMPEG, "-y", "-loop", "1", "-i", image_png, "-i", audio_mp3,
-        "-filter_complex", filter_complex,
-        "-map", "[v]", "-map", "1:a",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-        "-c:a", "aac", "-b:a", "192k",
-        "-shortest", "-movflags", "+faststart", out_mp4
+        FFMPEG,
+        "-y",
+        "-loop",
+        "1",
+        "-i",
+        image_png,
+        "-i",
+        audio_mp3,
+        "-filter_complex",
+        filter_complex,
+        "-map",
+        "[v]",
+        "-map",
+        "1:a",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "fast",
+        "-crf",
+        "20",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-shortest",
+        "-movflags",
+        "+faststart",
+        out_mp4,
     ]
     run_cmd(cmd)
     LOG.info("Created video: %s", out_mp4)
@@ -293,11 +373,13 @@ def create_mp4_from_image_and_audio(image_png: str, audio_mp3: str, out_mp4: str
 
 
 # ----- orchestration: main generate_short -----
-def generate_short(topic: str,
-                   out_root: str = "shorts",
-                   voice: str = DEFAULT_VOICE,
-                   sfx_timing: Optional[List[Tuple[str, int]]] = None,
-                   force_use_gtts: bool = False) -> str:
+def generate_short(
+    topic: str,
+    out_root: str = "shorts",
+    voice: str = DEFAULT_VOICE,
+    sfx_timing: Optional[List[Tuple[str, int]]] = None,
+    force_use_gtts: bool = False,
+) -> str:
     """
     Generate a single final mp4 for `topic`.
     sfx_timing: list of tuples (sfx_path, ms_offset) to overlay on final audio (optional).
@@ -333,7 +415,7 @@ def generate_short(topic: str,
         LOG.info("Attempting gTTS fallback")
         success = try_gtts_text_to_mp3(tts_text, tmp_mp3)
     # 3) final fallback: pyttsx3 -> wav -> mp3
-    if (not success):
+    if not success:
         LOG.info("Attempting pyttsx3 fallback (WAV)")
         ok = try_pyttsx3_text_to_wav(tts_text, tmp_wav)
         if ok and os.path.exists(tmp_wav):
@@ -344,7 +426,22 @@ def generate_short(topic: str,
         raise RuntimeError("All TTS attempts failed")
 
     # 4) Normalize loudness (loudnorm) - create norm_mp3
-    run_cmd([FFMPEG, "-y", "-i", tmp_mp3, "-vn", "-af", "loudnorm=I=-16:TP=-1.5:LRA=11,dynaudnorm=f=150:g=15", "-ar", "44100", "-ac", "2", norm_mp3])
+    run_cmd(
+        [
+            FFMPEG,
+            "-y",
+            "-i",
+            tmp_mp3,
+            "-vn",
+            "-af",
+            "loudnorm=I=-16:TP=-1.5:LRA=11,dynaudnorm=f=150:g=15",
+            "-ar",
+            "44100",
+            "-ac",
+            "2",
+            norm_mp3,
+        ]
+    )
 
     # 5) Flavor audio (compress + subtle reverb)
     flavor_audio_broadcast(norm_mp3, flavored_mp3)
@@ -367,15 +464,42 @@ def generate_short(topic: str,
             # input index is idx (0=voice, 1..n sfx)
             delay_filters.append(f"[{idx}:a]adelay={ms}|{ms}[s{idx}]")
         mix_inputs = "[0:a]" + "".join(f"[s{i}]" for i in range(1, len(sfx_timing) + 1))
-        af = ";".join(delay_filters) + ";" + f"{mix_inputs}amix=inputs={1+len(sfx_timing)}:duration=first:dropout_transition=2[aout]"
-        cmd += ["-filter_complex", af, "-map", "[aout]", "-c:a", "aac", "-b:a", "192k", final_mp3 + ".sfx.mp4"]
+        af = (
+            ";".join(delay_filters)
+            + ";"
+            + f"{mix_inputs}amix=inputs={1+len(sfx_timing)}:duration=first:dropout_transition=2[aout]"
+        )
+        cmd += [
+            "-filter_complex",
+            af,
+            "-map",
+            "[aout]",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            final_mp3 + ".sfx.mp4",
+        ]
         try:
             run_cmd(cmd)
             # after mixing, replace final_mp3 with the mixed audio (we used mp4 container)
             # extract audio (mp3) back (or simply use that mp4 as audio input)
             tmp_mixed = final_mp3 + ".sfx.mp4"
             final_mp3 = final_mp3 + ".mixed.mp3"
-            run_cmd([FFMPEG, "-y", "-i", tmp_mixed, "-vn", "-ar", "44100", "-ac", "2", final_mp3])
+            run_cmd(
+                [
+                    FFMPEG,
+                    "-y",
+                    "-i",
+                    tmp_mixed,
+                    "-vn",
+                    "-ar",
+                    "44100",
+                    "-ac",
+                    "2",
+                    final_mp3,
+                ]
+            )
         except Exception as e:
             LOG.warning("SFX mixing failed: %s", e)
 
@@ -395,11 +519,19 @@ def generate_short(topic: str,
 # If run as script for quick test
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("topic", nargs="?", default="Test Trend Headline: Amazing news today")
+    parser.add_argument(
+        "topic", nargs="?", default="Test Trend Headline: Amazing news today"
+    )
     parser.add_argument("--out", default="shorts")
     parser.add_argument("--voice", default=DEFAULT_VOICE)
-    parser.add_argument("--sfx", nargs="*", help="pairs sfxPath:msOffset (e.g. sfx/whoosh.mp3:600 )", default=[])
+    parser.add_argument(
+        "--sfx",
+        nargs="*",
+        help="pairs sfxPath:msOffset (e.g. sfx/whoosh.mp3:600 )",
+        default=[],
+    )
     args = parser.parse_args()
 
     sfx_list = []
@@ -408,7 +540,9 @@ if __name__ == "__main__":
             p, m = s.split(":", 1)
             try:
                 sfx_list.append((p, int(m)))
-            except:
+            except Exception:
                 pass
-    path = generate_short(args.topic, out_root=args.out, voice=args.voice, sfx_timing=sfx_list)
+    path = generate_short(
+        args.topic, out_root=args.out, voice=args.voice, sfx_timing=sfx_list
+    )
     print("Done ->", path)

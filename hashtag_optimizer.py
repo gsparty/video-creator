@@ -12,8 +12,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
-from config import (GOOGLE_SERVICE_ACCOUNT_JSON, SHEET_ID, SHEET_NAME,
-                    TOKENS_DIR)
+from config import GOOGLE_SERVICE_ACCOUNT_JSON, SHEET_ID, SHEET_NAME, TOKENS_DIR
 
 
 # Simple hashtag optimizer
@@ -25,6 +24,7 @@ def optimize_hashtags(text: str, max_tags: int = 8):
     # Always add shorts + trending
     tags.extend(["#shorts", "#trending"])
     return tags[:max_tags]
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -38,10 +38,13 @@ if __name__ == "__main__":
 SCOPES_SHEETS = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 TOKENS_PATH = Path(TOKENS_DIR) / "youtube_token.json"
 
+
 def open_sheet():
     if not GOOGLE_SERVICE_ACCOUNT_JSON:
         raise RuntimeError("SERVICE_ACCOUNT_FILE/GOOGLE_SERVICE_ACCOUNT_JSON not set")
-    creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_SERVICE_ACCOUNT_JSON, SCOPES_SHEETS)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(
+        GOOGLE_SERVICE_ACCOUNT_JSON, SCOPES_SHEETS
+    )
     gc = gspread.authorize(creds)
     if SHEET_ID:
         sh = gc.open_by_key(SHEET_ID)
@@ -50,9 +53,11 @@ def open_sheet():
     ws = sh.sheet1
     return ws
 
+
 def parse_rows(ws):
     rows = ws.get_all_records()
     return rows
+
 
 def extract_video_id(url: str) -> str:
     if not url:
@@ -69,17 +74,23 @@ def extract_video_id(url: str) -> str:
             return candidate
     return ""
 
+
 def yt_client_from_token():
     if not TOKENS_PATH.exists():
-        raise RuntimeError("YouTube token not found. Run an authenticated upload once to create tokens/youtube_token.json")
-    creds = Credentials.from_authorized_user_file(str(TOKENS_PATH), scopes=["https://www.googleapis.com/auth/youtube.readonly"])
+        raise RuntimeError(
+            "YouTube token not found. Run an authenticated upload once to create tokens/youtube_token.json"
+        )
+    creds = Credentials.from_authorized_user_file(
+        str(TOKENS_PATH), scopes=["https://www.googleapis.com/auth/youtube.readonly"]
+    )
     return build("youtube", "v3", credentials=creds)
+
 
 def fetch_view_counts_for_ids(youtube, ids: List[str]) -> Dict[str, int]:
     out = {}
     # YouTube API allows up to 50 ids per request
     for i in range(0, len(ids), 50):
-        batch = ids[i:i+50]
+        batch = ids[i : i + 50]
         resp = youtube.videos().list(part="statistics", id=",".join(batch)).execute()
         for item in resp.get("items", []):
             vid = item.get("id")
@@ -88,6 +99,7 @@ def fetch_view_counts_for_ids(youtube, ids: List[str]) -> Dict[str, int]:
             out[vid] = views
         time.sleep(0.1)
     return out
+
 
 def aggregate_hashtags(rows) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
     """
@@ -108,7 +120,10 @@ def aggregate_hashtags(rows) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]
             tag_to_rows[t.lower()].append(r.get("Topic") or r.get("topic") or "")
     return tag_to_vids, tag_to_rows
 
-def compute_stats(tag_to_vids: Dict[str, List[str]], youtube) -> List[Tuple[str,int,int,float]]:
+
+def compute_stats(
+    tag_to_vids: Dict[str, List[str]], youtube
+) -> List[Tuple[str, int, int, float]]:
     """
     For each tag, compute (tag, count_videos, total_views, avg_views)
     """
@@ -122,15 +137,19 @@ def compute_stats(tag_to_vids: Dict[str, List[str]], youtube) -> List[Tuple[str,
         total = sum(views_map.get(v, 0) for v in vids)
         avg = total / counts if counts else 0
         results.append((tag, counts, total, avg))
-    results.sort(key=lambda x: (x[3], x[1]), reverse=True)  # sort by avg_views desc, then count
+    results.sort(
+        key=lambda x: (x[3], x[1]), reverse=True
+    )  # sort by avg_views desc, then count
     return results
+
 
 def write_csv(out_path: Path, rows):
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["hashtag", "count_videos", "total_views", "avg_views"])
         for tag, cnt, total, avg in rows:
-            w.writerow([tag, cnt, total, round(avg,2)])
+            w.writerow([tag, cnt, total, round(avg, 2)])
+
 
 def recommend_for_topic(topic: str, top_n: int = 10):
     ws = open_sheet()

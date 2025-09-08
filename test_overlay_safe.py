@@ -4,7 +4,9 @@ import numpy as np
 from text_overlay import make_text_clip
 
 try:
-    c = make_text_clip("DEBUG Overlay ✅", fontsize=140, color="white", size=(1080,1920), duration=2)
+    c = make_text_clip(
+        "DEBUG Overlay ✅", fontsize=140, color="white", size=(1080, 1920), duration=2
+    )
     print("make_text_clip returned:", type(c))
     # grab a frame
     arr = c.get_frame(0)  # returns float or uint array

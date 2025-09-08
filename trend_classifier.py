@@ -34,13 +34,19 @@ def _default_training_data():
         "best recipes for dinner",
     ]
     labels = [
-        "sports", "sports",
-        "music", "music",
-        "tech", "tech",
-        "politics", "politics",
-        "tech", "celebrity",
+        "sports",
+        "sports",
+        "music",
+        "music",
+        "tech",
+        "tech",
+        "politics",
+        "politics",
+        "tech",
         "celebrity",
-        "lifestyle", "lifestyle",
+        "celebrity",
+        "lifestyle",
+        "lifestyle",
     ]
     return texts, labels
 
@@ -130,4 +136,7 @@ if __name__ == "__main__":
         print("label:", predict_label(args.predict))
     else:
         print("model file:", MODEL_PATH.resolve())
-        print("example prediction:", predict_label("Huge football upset today — Ronaldo shocked fans"))
+        print(
+            "example prediction:",
+            predict_label("Huge football upset today — Ronaldo shocked fans"),
+        )

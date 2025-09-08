@@ -7,7 +7,9 @@ import text_overlay
 size = (1080, 1920)
 headline = "DEBUG Overlay ✅"
 try:
-    clip = text_overlay.make_text_clip(headline, fontsize=140, color="white", size=size, duration=2)
+    clip = text_overlay.make_text_clip(
+        headline, fontsize=140, color="white", size=size, duration=2
+    )
     print("make_text_clip returned:", type(clip), flush=True)
     # try to save a single frame robustly
     saved = False
@@ -24,6 +26,7 @@ try:
             import imageio
             import numpy as np
             import PIL.Image as Image
+
             if hasattr(clip, "img"):
                 arr = np.array(clip.img).astype("uint8")
                 Image.fromarray(arr).save("debug_txt_img.png")
@@ -36,6 +39,7 @@ try:
         try:
             import imageio
             import numpy as _np
+
             arr = clip.get_frame(0)
             # ensure uint8
             arr = (_np.clip(arr, 0, 255)).astype(_np.uint8)

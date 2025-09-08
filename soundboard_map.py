@@ -18,6 +18,7 @@ DEFAULT_MAP = {
     "other": ("neutral_bg.mp3", 0.10, 1.0),
 }
 
+
 def get_soundbed_for_label(label: str):
     """
     Return (full_path:Path, bed_vol:float, voice_vol:float).

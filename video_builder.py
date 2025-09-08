@@ -3,7 +3,6 @@
 # --- INSERTED: write_with_overlay helper (safe, top-level) ---
 
 
-
 import json
 import os
 import random
@@ -12,35 +11,58 @@ from pathlib import Path
 
 import numpy as _np
 import requests
-from moviepy.editor import (CompositeVideoClip, ImageClip, TextClip,
-                            VideoFileClip, concatenate_videoclips)
+from moviepy.editor import (
+    CompositeVideoClip,
+    ImageClip,
+    TextClip,
+    VideoFileClip,
+    concatenate_videoclips,
+)
 from PIL import Image
 
 from text_overlay import make_text_clip
 
 
-def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="aac", **kwargs):
+def write_with_overlay(
+    clip, filename, fps=None, codec="libx264", audio_codec="aac", **kwargs
+):
     """
     Composite a robust text overlay (ImageMagick -> Pillow fallback) then write the clip.
     This helper MUST be defined before any call to write_with_overlay at runtime.
     """
-    _headline = globals().get("topic") or globals().get("headline") or globals().get("chosen_topic") or "Top Trend"
+    _headline = (
+        globals().get("topic")
+        or globals().get("headline")
+        or globals().get("chosen_topic")
+        or "Top Trend"
+    )
     try:
-        txt = make_text_clip(str(_headline),
-                             fontsize=80,
-                             color="white",
-                             size=getattr(clip, "size", (1080,1920)),
-                             duration=min(5, getattr(clip, "duration", 5)))
+        txt = make_text_clip(
+            str(_headline),
+            fontsize=80,
+            color="white",
+            size=getattr(clip, "size", (1080, 1920)),
+            duration=min(5, getattr(clip, "duration", 5)),
+        )
         txt = txt.set_position(("center", "center"))
         # ensure clip has a duration set
         dur = getattr(clip, "duration", None) or getattr(clip, "duration", 5)
         clip = CompositeVideoClip([clip, txt]).set_duration(dur)
     except Exception as e:
-        print("[video_builder] write_with_overlay: make_text_clip failed:", e, flush=True)
+        print(
+            "[video_builder] write_with_overlay: make_text_clip failed:", e, flush=True
+        )
 
     fps_final = fps or getattr(clip, "fps", 25)
-    print(f"[video_builder] write_with_overlay: writing {filename} with headline: {_headline}", flush=True)
-    write_with_overlay(clip, filename, fps=fps_final, codec=codec, audio_codec=audio_codec, **kwargs)
+    print(
+        f"[video_builder] write_with_overlay: writing {filename} with headline: {_headline}",
+        flush=True,
+    )
+    write_with_overlay(
+        clip, filename, fps=fps_final, codec=codec, audio_codec=audio_codec, **kwargs
+    )
+
+
 # --- end inserted helper ---
 
 # MoviePy imports
@@ -61,9 +83,11 @@ PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")  # optional
 STOCK_DIR = Path.cwd() / "stock_clips"
 OUT_FILE = "autonomous_video.mp4"
 
+
 # --- Helpers ---
 def log(msg):
     print(f"[video_builder] {msg}", flush=True)
+
 
 def parse_input_arg(arg):
     """Accept server-style JSON or plain string topic."""
@@ -82,6 +106,7 @@ def parse_input_arg(arg):
         # treat arg as raw topic string
         return arg
     return None
+
 
 def get_stock_videos_pexels(query, max_results=3):
     if not PEXELS_API_KEY:
@@ -109,6 +134,7 @@ def get_stock_videos_pexels(query, max_results=3):
         log(f"pexels fetch error: {e}")
         return []
 
+
 def get_stock_videos_local(query, max_results=3):
     # return a list of local file paths (strings)
     files = list(STOCK_DIR.glob("*.mp4")) + list(STOCK_DIR.glob("*.mov"))
@@ -118,6 +144,7 @@ def get_stock_videos_local(query, max_results=3):
     picked = files[:max_results]
     return [str(p) for p in picked]
 
+
 def download_if_needed(src, dest):
     # if src looks like a URL, download to dest (overwrite)
     if src.startswith("http://") or src.startswith("https://"):
@@ -125,12 +152,13 @@ def download_if_needed(src, dest):
         r = requests.get(src, stream=True, timeout=30)
         r.raise_for_status()
         with open(dest, "wb") as fh:
-            for chunk in r.iter_content(1024*8):
+            for chunk in r.iter_content(1024 * 8):
                 fh.write(chunk)
         return dest
     else:
         # local file, return existing path
         return src
+
 
 def build_video_from_trend(topic):
     log(f"building video for topic: {topic}")
@@ -169,7 +197,9 @@ def build_video_from_trend(topic):
             v = video.subclip(0, dur)
         # create text overlay (TextClip uses ImageMagick; if ImageMagick not present, may raise)
         try:
-            txt = TextClip(line, fontsize=60, color="white", size=v.size, method="caption")
+            txt = TextClip(
+                line, fontsize=60, color="white", size=v.size, method="caption"
+            )
             txt = txt.set_duration(v.duration).set_position(("center", "bottom"))
             composed = CompositeVideoClip([v, txt])
         except Exception as e:
@@ -180,6 +210,7 @@ def build_video_from_trend(topic):
     final = concatenate_videoclips(clips, method="compose")
     write_with_overlay(final, OUT_FILE, codec="libx264", audio_codec="aac")
     return OUT_FILE
+
 
 # --- CLI entry ---
 def main():
@@ -196,13 +227,9 @@ def main():
         print(json.dumps({"ok": False, "error": str(e)}))
         sys.exit(1)
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
 
 
 # --- APPENDED: write_with_overlay helper (safe, cached, no-recursion) ---
@@ -213,16 +240,30 @@ try:
 except NameError:
     _WRITE_OVERLAY_CACHE = {}
 
-def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="aac", overlay_duration=5, **kwargs):
+
+def write_with_overlay_dup(
+    clip,
+    filename,
+    fps=None,
+    codec="libx264",
+    audio_codec="aac",
+    overlay_duration=5,
+    **kwargs,
+):
     """
     Composite a cached text overlay (ImageMagick -> Pillow fallback) and write the clip.
     Uses class method CompositeVideoClip.write_videofile to avoid accidental recursion
     if other code replaced instance methods.
     """
     global _WRITE_OVERLAY_CACHE
-    _headline = globals().get("topic") or globals().get("headline") or globals().get("chosen_topic") or "Top Trend"
+    _headline = (
+        globals().get("topic")
+        or globals().get("headline")
+        or globals().get("chosen_topic")
+        or "Top Trend"
+    )
     try:
-        size = tuple(getattr(clip, "size", (1080,1920)))
+        size = tuple(getattr(clip, "size", (1080, 1920)))
         dur = min(overlay_duration, float(getattr(clip, "duration", overlay_duration)))
         cache_key = (size, str(_headline))
 
@@ -231,11 +272,15 @@ def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="a
             txt_clip = _WRITE_OVERLAY_CACHE[cache_key].set_duration(dur)
         else:
             try:
-                txt_clip = make_text_clip(str(_headline), fontsize=80, color="white", size=size, duration=dur)
+                txt_clip = make_text_clip(
+                    str(_headline), fontsize=80, color="white", size=size, duration=dur
+                )
                 # ensure ImageClip arrays are in uint8 if they expose img as array
                 try:
                     # if the clip is an ImageClip with .img attribute, convert dtype
-                    if hasattr(txt_clip, "img") and isinstance(txt_clip.img, (list, tuple))==False:
+                    if hasattr(txt_clip, "img") and not isinstance(
+                        txt_clip.img, (list, tuple)
+                    ):
                         arr = _np.array(txt_clip.img)
                         if arr.dtype != _np.uint8:
                             arr = arr.astype(_np.uint8, copy=False)
@@ -244,12 +289,18 @@ def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="a
                     pass
                 _WRITE_OVERLAY_CACHE[cache_key] = txt_clip
             except Exception as e:
-                print("[video_builder] write_with_overlay: make_text_clip failed:", e, flush=True)
+                print(
+                    "[video_builder] write_with_overlay: make_text_clip failed:",
+                    e,
+                    flush=True,
+                )
                 txt_clip = None
 
         # Compose (if we have a text clip)
         if txt_clip is not None:
-            comp = CompositeVideoClip([clip, txt_clip.set_position(("center", "center"))]).set_duration(getattr(clip, "duration", dur))
+            comp = CompositeVideoClip(
+                [clip, txt_clip.set_position(("center", "center"))]
+            ).set_duration(getattr(clip, "duration", dur))
         else:
             comp = clip  # fallback: write plain clip
 
@@ -258,8 +309,15 @@ def write_with_overlay(clip, filename, fps=None, codec="libx264", audio_codec="a
         comp = clip
 
     fps_final = fps or getattr(comp, "fps", getattr(clip, "fps", 25))
-    print(f"[video_builder] write_with_overlay: writing {filename} with headline: {_headline}", flush=True)
+    print(
+        f"[video_builder] write_with_overlay: writing {filename} with headline: {_headline}",
+        flush=True,
+    )
 
     # IMPORTANT: call the class method to avoid a replaced instance attribute causing recursion
-    CompositeVideoClip.write_videofile(comp, filename, fps=fps_final, codec=codec, audio_codec=audio_codec, **kwargs)
+    CompositeVideoClip.write_videofile(
+        comp, filename, fps=fps_final, codec=codec, audio_codec=audio_codec, **kwargs
+    )
+
+
 # --- end appended helper ---

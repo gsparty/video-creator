@@ -12,17 +12,40 @@ from pathlib import Path
 ROOT = Path.cwd()
 SOUNDS_DIR = ROOT / "assets" / "sounds"
 
+
 def ffprobe_info(path: Path):
-    cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(path),
+    ]
     p = subprocess.run(cmd, capture_output=True, text=True)
     return p.returncode, p.stdout.strip(), p.stderr.strip()
 
+
 def volumedetect(path: Path):
     # capture stderr where volumedetect outputs
-    cmd = ["ffmpeg", "-v", "error", "-i", str(path), "-af", "volumedetect", "-f", "null", "-"]
+    cmd = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-af",
+        "volumedetect",
+        "-f",
+        "null",
+        "-",
+    ]
     p = subprocess.run(cmd, capture_output=True, text=True)
     # volumedetect outputs on stderr
     return p.returncode, p.stdout.strip(), p.stderr.strip()
+
 
 def validate_all():
     if not SOUNDS_DIR.exists():
@@ -58,6 +81,7 @@ def validate_all():
             if "mean_volume" in combined:
                 # parse mean_volume
                 import re
+
                 m = re.search(r"mean_volume:\s*(-?\d+(\.\d+)?)\s*dB", combined)
                 mval = float(m.group(1)) if m else None
                 print("  mean_volume (dB):", mval)
@@ -65,6 +89,7 @@ def validate_all():
                 print("  volumedetect produced no mean_volume; ffmpeg output snippet:")
                 print(combined[:1000])  # print first chunk for debugging
             print("")
+
 
 if __name__ == "__main__":
     validate_all()

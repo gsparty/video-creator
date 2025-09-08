@@ -3,6 +3,7 @@
 Lightweight, flake8-friendly YouTube uploader helper using a service
 account. Replace CONFIG values and call upload_video(...) as needed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,9 @@ def get_authenticated_service(
     """Return an authenticated YouTube API client using a service account."""
     if scopes is None:
         scopes = YOUTUBE_SCOPES
-    credentials = Credentials.from_service_account_file(sa_json_path, scopes=list(scopes))
+    credentials = Credentials.from_service_account_file(
+        sa_json_path, scopes=list(scopes)
+    )
     youtube = build("youtube", "v3", credentials=credentials, cache_discovery=False)
     return youtube
 
@@ -48,7 +51,9 @@ def upload_video(
     }
 
     media = MediaFileUpload(video_file, chunksize=-1, resumable=True)
-    request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+    request = youtube.videos().insert(
+        part="snippet,status", body=body, media_body=media
+    )
 
     response = None
     # Simple resumable upload loop (no backoff logic here; add as needed).
@@ -62,11 +67,15 @@ def upload_video(
 
 def main():
     parser = argparse.ArgumentParser(description="Upload video to YouTube.")
-    parser.add_argument("--sa-json", required=True, help="Path to service account JSON.")
+    parser.add_argument(
+        "--sa-json", required=True, help="Path to service account JSON."
+    )
     parser.add_argument("--file", required=True, help="Local video file path.")
     parser.add_argument("--title", required=True, help="Video title.")
     parser.add_argument("--desc", default="", help="Video description.")
-    parser.add_argument("--privacy", default="public", help="privacy: public|unlisted|private")
+    parser.add_argument(
+        "--privacy", default="public", help="privacy: public|unlisted|private"
+    )
     args = parser.parse_args()
 
     if not os.path.exists(args.sa_json):

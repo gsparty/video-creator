@@ -26,6 +26,7 @@ with open(times_file, "r", encoding="utf-8") as f:
 # If there are no times, just copy the original tts to output
 if len(times) == 0:
     import shutil
+
     shutil.copy(tts, out)
     print("No caption times found — copied TTS to", out)
     sys.exit(0)
@@ -55,7 +56,17 @@ mix_part = f"{mix_input_sequence}amix=inputs={1+len(labels)}:dropout_transition=
 
 filter_complex = f"{adelay_part};{mix_part}"
 
-cmd += ["-filter_complex", filter_complex, "-map", "[aout]", "-c:a", "aac", "-b:a", "128k", out]
+cmd += [
+    "-filter_complex",
+    filter_complex,
+    "-map",
+    "[aout]",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "128k",
+    out,
+]
 
 print("Running FFmpeg to mix SFX into TTS...")
 # show a short human readable preview of the command (useful for debugging)

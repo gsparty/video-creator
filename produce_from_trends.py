@@ -27,9 +27,12 @@ try:
 except Exception as e:
     raise SystemExit("Cannot import generate_short from short_maker.py: " + str(e))
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [produce] %(levelname)s %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [produce] %(levelname)s %(message)s"
+)
 
 DEFAULT_SERVER = os.environ.get("SCRAPER_SERVER", "http://127.0.0.1:8080")
+
 
 def fetch_trends(server=DEFAULT_SERVER, timeout=15):
     url = server.rstrip("/") + "/scrape"
@@ -42,6 +45,7 @@ def fetch_trends(server=DEFAULT_SERVER, timeout=15):
     except Exception as e:
         logging.exception("Failed to fetch trends: %s", e)
         return []
+
 
 def select_trends(trends, count=3, min_interest=5, min_spike=1.0, prefer_source=None):
     """
@@ -60,7 +64,9 @@ def select_trends(trends, count=3, min_interest=5, min_spike=1.0, prefer_source=
             spike = float(t.get("spike") or 0)
         except Exception:
             spike = 0.0
-        score = float(t.get("tuned_score") or t.get("baseScore") or (interest + spike*10) or 0)
+        score = float(
+            t.get("tuned_score") or t.get("baseScore") or (interest + spike * 10) or 0
+        )
         prepared.append((t, interest, spike, score))
 
     # prefer items that meet thresholds
@@ -71,12 +77,20 @@ def select_trends(trends, count=3, min_interest=5, min_spike=1.0, prefer_source=
 
     # optionally prefer a source
     if prefer_source:
-        filtered.sort(key=lambda x: (0 if x[0].get("source")==prefer_source else 1, -x[3], -x[1], -x[2]))
+        filtered.sort(
+            key=lambda x: (
+                0 if x[0].get("source") == prefer_source else 1,
+                -x[3],
+                -x[1],
+                -x[2],
+            )
+        )
     else:
         filtered.sort(key=lambda x: (-x[3], -x[1], -x[2]))
 
     selected = [p[0] for p in filtered[:count]]
     return selected
+
 
 def produce_shorts_for_trends(trends, delay_between=3, dry_run=False):
     results = []
@@ -100,14 +114,30 @@ def produce_shorts_for_trends(trends, delay_between=3, dry_run=False):
         time.sleep(delay_between)
     return results
 
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--server", default=DEFAULT_SERVER, help="Scraper server base url (default http://127.0.0.1:8080)")
-    p.add_argument("--count", type=int, default=3, help="How many top trends to produce")
-    p.add_argument("--min-interest", type=float, default=12.0, help="Filter: minimum interest to consider")
-    p.add_argument("--min-spike", type=float, default=1.2, help="Filter: minimum spike to consider")
+    p.add_argument(
+        "--server",
+        default=DEFAULT_SERVER,
+        help="Scraper server base url (default http://127.0.0.1:8080)",
+    )
+    p.add_argument(
+        "--count", type=int, default=3, help="How many top trends to produce"
+    )
+    p.add_argument(
+        "--min-interest",
+        type=float,
+        default=12.0,
+        help="Filter: minimum interest to consider",
+    )
+    p.add_argument(
+        "--min-spike", type=float, default=1.2, help="Filter: minimum spike to consider"
+    )
     p.add_argument("--delay", type=int, default=3, help="Seconds between jobs")
-    p.add_argument("--dry-run", action="store_true", help="Don't call generate_short, just show")
+    p.add_argument(
+        "--dry-run", action="store_true", help="Don't call generate_short, just show"
+    )
     args = p.parse_args()
 
     trends = fetch_trends(server=args.server)
@@ -115,11 +145,23 @@ def main():
         logging.error("No trends returned, exiting.")
         return
 
-    selected = select_trends(trends, count=args.count, min_interest=args.min_interest, min_spike=args.min_spike)
-    logging.info("Selected %d trends: %s", len(selected), [s.get("cleaned") or s.get("topic") for s in selected])
+    selected = select_trends(
+        trends,
+        count=args.count,
+        min_interest=args.min_interest,
+        min_spike=args.min_spike,
+    )
+    logging.info(
+        "Selected %d trends: %s",
+        len(selected),
+        [s.get("cleaned") or s.get("topic") for s in selected],
+    )
 
-    results = produce_shorts_for_trends(selected, delay_between=args.delay, dry_run=args.dry_run)
+    results = produce_shorts_for_trends(
+        selected, delay_between=args.delay, dry_run=args.dry_run
+    )
     logging.info("Done. Results:\n%s", results)
+
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ ROOT = Path.cwd()
 print("Working in", ROOT)
 
 # 1) write pil_compat.py
-pil_code = r'''
+pil_code = r"""
 # pil_compat.py -- small shim so MoviePy's use of PIL.Image.ANTIALIAS works
 try:
     from PIL import Image
@@ -32,7 +32,7 @@ try:
         Image.Resampling.LANCZOS = Image.LANCZOS
 except Exception:
     pass
-'''
+"""
 (Path(ROOT) / "pil_compat.py").write_text(pil_code, encoding="utf-8")
 print("Wrote pil_compat.py")
 
@@ -48,6 +48,7 @@ if vb.exists():
         print("No `n corruption found in video_builder.py")
 else:
     print("video_builder.py not found — skipping backtick repair")
+
 
 # 3) ensure import pil_compat at the top of text_overlay.py and video_builder.py
 def ensure_import(path):
@@ -71,6 +72,7 @@ def ensure_import(path):
     lines.insert(insert_at, "import pil_compat")
     p.write_text("\n".join(lines), encoding="utf-8")
     print(f"Inserted import pil_compat into {path}")
+
 
 ensure_import(ROOT / "text_overlay.py")
 ensure_import(ROOT / "video_builder.py")

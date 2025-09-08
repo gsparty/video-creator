@@ -16,4 +16,3 @@ from moviepy.editor import TextClip  # noqa: E402
 
 txt = TextClip("hello world", fontsize=50)  # this invokes ImageMagick
 print("TextClip OK, IMAGEMAGICK_BINARY=", mpc.IMAGEMAGICK_BINARY)
-

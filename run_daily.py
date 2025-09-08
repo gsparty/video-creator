@@ -22,6 +22,7 @@ import requests
 # try import langdetect for language filtering; if missing we'll fallback to ASCII heuristic
 try:
     from langdetect import detect_langs
+
     LANGDETECT_AVAILABLE = True
 except Exception:
     LANGDETECT_AVAILABLE = False
@@ -37,12 +38,16 @@ except Exception as e:
 SHEETS_AVAILABLE = False
 try:
     from sheets_logger import SheetsLogger
+
     SHEETS_AVAILABLE = True
 except Exception:
     SHEETS_AVAILABLE = False
 
 # config from env
-SCRAPER_URL = os.environ.get("SCRAPER_URL", "https://us-central1-automate-trends-scraper.cloudfunctions.net/scrapeTrends")
+SCRAPER_URL = os.environ.get(
+    "SCRAPER_URL",
+    "https://us-central1-automate-trends-scraper.cloudfunctions.net/scrapeTrends",
+)
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_DIR", "shorts"))
 OUTBOX_DIR = Path(os.environ.get("OUTBOX_DIR", "outbox"))
 RUN_SUMMARY_DIR = OUTPUT_ROOT / "run_summaries"
@@ -78,7 +83,9 @@ def detect_english(text: str, prob_threshold: float = 0.60) -> bool:
 
     # Quick pre-clean: remove hashtags/punctuation that confuse detectors
     sample = re.sub(r"[_#@]", " ", text)
-    sample = re.sub(r"[^\w\s\-\']", " ", sample)  # keep letters, numbers, dashes, apostrophes
+    sample = re.sub(
+        r"[^\w\s\-\']", " ", sample
+    )  # keep letters, numbers, dashes, apostrophes
     sample = re.sub(r"\s+", " ", sample).strip()
 
     if LANGDETECT_AVAILABLE:
@@ -87,7 +94,10 @@ def detect_english(text: str, prob_threshold: float = 0.60) -> bool:
             # langs is like [LangProb(lang='en', prob=0.998), ...]
             if len(langs) > 0:
                 top = langs[0]
-                if getattr(top, "lang", None) == "en" and getattr(top, "prob", 0.0) >= prob_threshold:
+                if (
+                    getattr(top, "lang", None) == "en"
+                    and getattr(top, "prob", 0.0) >= prob_threshold
+                ):
                     return True
                 # if the detector says 'und' or another script but probability low, fallback to ascii
         except Exception:
@@ -149,12 +159,17 @@ def stage_for_platforms(mp4_path: str, caption: str, slug: str, voice_variant: s
     if not src.exists():
         log.warning("stage_for_platforms: mp4 not found: %s", mp4_path)
         return
-    voice_tag = voice_variant.replace("/", "_").replace(":", "_") if voice_variant else "default"
+    voice_tag = (
+        voice_variant.replace("/", "_").replace(":", "_")
+        if voice_variant
+        else "default"
+    )
     dest_name = f"{slug}_{voice_tag}.mp4"
     ig_target = ig_dir / dest_name
     tt_target = tt_dir / dest_name
     try:
         from shutil import copy2
+
         copy2(src, ig_target)
         copy2(src, tt_target)
         (ig_dir / f"{slug}_{voice_tag}.txt").write_text(caption or "", encoding="utf-8")
@@ -202,23 +217,64 @@ def filter_english(trends: List[str], limit: int) -> List[str]:
 
 def main():
     parser = argparse.ArgumentParser(description="Daily Shorts generator")
-    parser.add_argument("--count", type=int, default=3, help="How many trends to process")
-    parser.add_argument("--region", type=str, default=None, help="Region/Country code (passed to scraper)")
-    parser.add_argument("--tts-engine", type=str, default=None, help="Which TTS engine to prefer (edge-tts, gtts, pyttsx3)")
-    parser.add_argument("--voice-variants", type=str, default=None,
-                        help='Comma-separated voice variant strings (e.g. "en-US-AriaNeural,en-GB-SomeOther")')
-    parser.add_argument("--only-stage", action="store_true", help="Don't upload; just stage for IG/TikTok")
-    parser.add_argument("--upload", action="store_true", help="Upload to YouTube (requires youtube oauth)")
-    parser.add_argument("--min-duration", type=float, default=DEFAULT_MIN_DURATION, help="Minimum audio duration (seconds)")
-    parser.add_argument("--start-index", type=int, default=0, help="Start from this index in trends list")
-    parser.add_argument("--english-only", "--en-only", action="store_true", help="Filter returned trends to English only")
+    parser.add_argument(
+        "--count", type=int, default=3, help="How many trends to process"
+    )
+    parser.add_argument(
+        "--region",
+        type=str,
+        default=None,
+        help="Region/Country code (passed to scraper)",
+    )
+    parser.add_argument(
+        "--tts-engine",
+        type=str,
+        default=None,
+        help="Which TTS engine to prefer (edge-tts, gtts, pyttsx3)",
+    )
+    parser.add_argument(
+        "--voice-variants",
+        type=str,
+        default=None,
+        help='Comma-separated voice variant strings (e.g. "en-US-AriaNeural,en-GB-SomeOther")',
+    )
+    parser.add_argument(
+        "--only-stage",
+        action="store_true",
+        help="Don't upload; just stage for IG/TikTok",
+    )
+    parser.add_argument(
+        "--upload",
+        action="store_true",
+        help="Upload to YouTube (requires youtube oauth)",
+    )
+    parser.add_argument(
+        "--min-duration",
+        type=float,
+        default=DEFAULT_MIN_DURATION,
+        help="Minimum audio duration (seconds)",
+    )
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        default=0,
+        help="Start from this index in trends list",
+    )
+    parser.add_argument(
+        "--english-only",
+        "--en-only",
+        action="store_true",
+        help="Filter returned trends to English only",
+    )
     args = parser.parse_args()
 
     ensure_dirs()
 
     voice_variants_list = []
     if args.voice_variants:
-        voice_variants_list = [v.strip() for v in args.voice_variants.split(",") if v.strip()]
+        voice_variants_list = [
+            v.strip() for v in args.voice_variants.split(",") if v.strip()
+        ]
 
     # init sheets logger if available
     sheets_logger = None
@@ -235,18 +291,26 @@ def main():
     trends = fetch_trends(SCRAPER_URL, region=args.region)
     if not trends:
         log.warning("No trends returned.")
-        write_run_summary([f"{time.strftime('%Y-%m-%d %H:%M:%S')} - No trends returned."])
+        write_run_summary(
+            [f"{time.strftime('%Y-%m-%d %H:%M:%S')} - No trends returned."]
+        )
         return
 
     # Optionally filter to English
     if args.english_only:
-        filtered = filter_english(trends, args.count + 10)  # try a few extras to ensure enough items
+        filtered = filter_english(
+            trends, args.count + 10
+        )  # try a few extras to ensure enough items
         if len(filtered) < args.count:
-            log.warning("Not enough English trends found (%d) - returning the best %d found.", len(filtered), len(filtered))
+            log.warning(
+                "Not enough English trends found (%d) - returning the best %d found.",
+                len(filtered),
+                len(filtered),
+            )
         trends = filtered
 
     start = max(0, args.start_index)
-    to_process = trends[start:start + args.count]
+    to_process = trends[start : start + args.count]
     log.info("Will process %d trends: %s", len(to_process), to_process)
 
     run_summary_lines = []
@@ -254,32 +318,48 @@ def main():
         slug = safe_slug_for_display(topic)
         try:
             log.info("Processing topic: %s", topic)
-            voice_variant_for_run = voice_variants_list[0] if voice_variants_list else None
+            voice_variant_for_run = (
+                voice_variants_list[0] if voice_variants_list else None
+            )
 
-            mp4_path, parts = generate_short(topic,
-                                             region=args.region or "US",
-                                             voice_variant=voice_variant_for_run,
-                                             min_duration=args.min_duration)
+            mp4_path, parts = generate_short(
+                topic,
+                region=args.region or "US",
+                voice_variant=voice_variant_for_run,
+                min_duration=args.min_duration,
+            )
             log.info("Generated short: %s", mp4_path)
 
             if args.only_stage:
                 caption = parts.get("caption", "")
-                stage_for_platforms(mp4_path, caption, slug, voice_variant_for_run or "default")
+                stage_for_platforms(
+                    mp4_path, caption, slug, voice_variant_for_run or "default"
+                )
                 log.info("Only-stage mode: skipping sheet logging.")
             else:
                 if args.upload:
                     try:
                         from youtube_uploader import upload_short
+
                         title = parts.get("title") or topic
                         desc = parts.get("caption") or ""
                         tags = []
                         if isinstance(desc, str):
-                            tags = [t.strip("#") for t in desc.split() if t.startswith("#")]
-                        youtube_url = upload_short(filepath=mp4_path, title=title, description=desc, tags=tags)
+                            tags = [
+                                t.strip("#") for t in desc.split() if t.startswith("#")
+                            ]
+                        youtube_url = upload_short(
+                            filepath=mp4_path, title=title, description=desc, tags=tags
+                        )
                         log.info("Uploaded to YouTube: %s", youtube_url)
                     except Exception as e:
                         log.warning("YouTube upload failed: %s", e)
-                stage_for_platforms(mp4_path, parts.get("caption", ""), slug, voice_variant_for_run or "default")
+                stage_for_platforms(
+                    mp4_path,
+                    parts.get("caption", ""),
+                    slug,
+                    voice_variant_for_run or "default",
+                )
                 row = [
                     time.strftime("%Y-%m-%d %H:%M:%S"),
                     args.region or "",
@@ -292,14 +372,18 @@ def main():
                     ",".join([h for h in (parts.get("suggested_hashtags") or [])]),
                     parts.get("caption", ""),
                     parts.get("voice", ""),
-                    mp4_path
+                    mp4_path,
                 ]
                 try_sheets_log(sheets_logger, row)
 
-            run_summary_lines.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {topic}: status=generated mp4={mp4_path}")
+            run_summary_lines.append(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {topic}: status=generated mp4={mp4_path}"
+            )
         except Exception as e:
             log.exception("Error processing topic '%s': %s", topic, e)
-            run_summary_lines.append(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {topic}: status=error: {type(e).__name__} {e}")
+            run_summary_lines.append(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {topic}: status=error: {type(e).__name__} {e}"
+            )
 
     write_run_summary(run_summary_lines)
     log.info("Run finished. Summary:")

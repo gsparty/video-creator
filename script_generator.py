@@ -32,13 +32,18 @@ def generate_script(topic: str, max_words: int = 60) -> str:
     if OPENAI_KEY:
         try:
             import openai
+
             openai.api_key = OPENAI_KEY
             prompt = (
                 f"You are a short-form video script writer. Produce a 15-30 second, punchy, "
                 f"3-sentence script about this topic. Keep it concrete and specific. Max {max_words} words.\n\nTopic: {topic}"
             )
             resp = openai.Completion.create(
-                engine="gpt-4o-mini" if "gpt-4o-mini" in openai.Engine.list() else "text-davinci-003",
+                engine=(
+                    "gpt-4o-mini"
+                    if "gpt-4o-mini" in openai.Engine.list()
+                    else "text-davinci-003"
+                ),
                 prompt=prompt,
                 max_tokens=180,
                 temperature=0.6,
@@ -62,4 +67,4 @@ if __name__ == "__main__":
         print("Generated Script:\n")
         print(textwrap.fill(s, width=80))
     else:
-        print("Usage: python script_generator.py \"Your topic here\"")
+        print('Usage: python script_generator.py "Your topic here"')

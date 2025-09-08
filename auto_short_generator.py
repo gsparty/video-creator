@@ -54,7 +54,11 @@ def build_short(
     # whoosh SFX: place once at whoosh_at (only if exists)
     if whoosh and Path(whoosh).exists():
         print(f"Loading whoosh SFX: {whoosh} at {whoosh_at}s")
-        who = AudioFileClip(str(whoosh)).volumex(whoosh_vol).set_start(max(0, min(whoosh_at, duration)))
+        who = (
+            AudioFileClip(str(whoosh))
+            .volumex(whoosh_vol)
+            .set_start(max(0, min(whoosh_at, duration)))
+        )
         audio_clips.append(who)
     else:
         print("No whoosh found / skipping whoosh.")
@@ -104,13 +108,25 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("input", help="Input video file (mp4)")
     p.add_argument("output", help="Output mp4 path")
-    p.add_argument("--background", default="background.mp3", help="Background bed music (looped)")
+    p.add_argument(
+        "--background", default="background.mp3", help="Background bed music (looped)"
+    )
     p.add_argument("--whoosh", default="whoosh.wav", help="Short whoosh SFX")
-    p.add_argument("--ending", default="ending.mp3", help="Ending sound (placed near end)")
-    p.add_argument("--whoosh-at", type=float, default=1.0, help="Seconds into video to play whoosh")
-    p.add_argument("--bg-vol", type=float, default=0.15, help="Background volume multiplier")
-    p.add_argument("--whoosh-vol", type=float, default=0.7, help="Whoosh volume multiplier")
-    p.add_argument("--ending-vol", type=float, default=0.9, help="Ending volume multiplier")
+    p.add_argument(
+        "--ending", default="ending.mp3", help="Ending sound (placed near end)"
+    )
+    p.add_argument(
+        "--whoosh-at", type=float, default=1.0, help="Seconds into video to play whoosh"
+    )
+    p.add_argument(
+        "--bg-vol", type=float, default=0.15, help="Background volume multiplier"
+    )
+    p.add_argument(
+        "--whoosh-vol", type=float, default=0.7, help="Whoosh volume multiplier"
+    )
+    p.add_argument(
+        "--ending-vol", type=float, default=0.9, help="Ending volume multiplier"
+    )
     args = p.parse_args()
 
     build_short(

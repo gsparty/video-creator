@@ -18,15 +18,20 @@ def main():
 
     print(f"Selected voice: {chosen} (lang: {lang})")
 
-    synthesis_input = tts.SynthesisInput(text="Hello from test TTS. This voice was auto-selected.")
+    synthesis_input = tts.SynthesisInput(
+        text="Hello from test TTS. This voice was auto-selected."
+    )
     voice = tts.VoiceSelectionParams(language_code=lang, name=chosen)
     audio_config = tts.AudioConfig(audio_encoding=tts.AudioEncoding.LINEAR16)
 
-    resp = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
+    resp = client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
     out = "tts_test.wav"
     with open(out, "wb") as f:
         f.write(resp.audio_content)
     print("Wrote", out)
+
 
 if __name__ == "__main__":
     try:

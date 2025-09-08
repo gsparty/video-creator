@@ -15,10 +15,15 @@ def fmt_srt_time(seconds):
     ms = int((seconds - int(seconds)) * 1000)
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("basename")
 parser.add_argument("--duration", type=float, default=25.0)
-parser.add_argument("--lines-file", default=None, help="Optional plain text file with one caption per line")
+parser.add_argument(
+    "--lines-file",
+    default=None,
+    help="Optional plain text file with one caption per line",
+)
 args = parser.parse_args()
 
 basename = args.basename
@@ -27,14 +32,14 @@ total_dur = args.duration
 # If user provided a plain text file with lines, read it. Otherwise get default placeholders.
 if args.lines_file and os.path.exists(args.lines_file):
     with open(args.lines_file, "r", encoding="utf-8") as f:
-        lines = [l.strip() for l in f.readlines() if l.strip()]
+        lines = [line.strip() for line in f.readlines() if line.strip()]
 else:
     # EDIT these lines to the exact captions you want for the topic
     lines = [
-      "Top lifehack: Do this one tiny change.",
-      "It saves time and money every day.",
-      "Try it for a week and you will notice the difference.",
-      "Share this tip with a friend."
+        "Top lifehack: Do this one tiny change.",
+        "It saves time and money every day.",
+        "Try it for a week and you will notice the difference.",
+        "Share this tip with a friend.",
     ]
 
 n = max(1, len(lines))
@@ -43,7 +48,7 @@ seg = total_dur / n
 srt_path = f"{basename}.srt"
 with open(srt_path, "w", encoding="utf-8") as s:
     for i, text in enumerate(lines, start=1):
-        start = (i-1)*seg
+        start = (i - 1) * seg
         end = start + seg
         s.write(f"{i}\n")
         s.write(f"{fmt_srt_time(start)} --> {fmt_srt_time(end)}\n")

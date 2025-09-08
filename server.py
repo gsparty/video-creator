@@ -29,6 +29,7 @@ except Exception as e:
 
 app = Flask(__name__)
 
+
 def choose_topic_from_scraper():
     scraper = os.environ.get("SCRAPER_URL")
     if not scraper:
@@ -43,19 +44,20 @@ def choose_topic_from_scraper():
             return first
         if isinstance(first, dict):
             # try common keys
-            for k in ("title","term","query","keyword","trend","name"):
+            for k in ("title", "term", "query", "keyword", "trend", "name"):
                 if first.get(k):
                     return first.get(k)
             # fallback to JSON serialize
             return json.dumps(first)
     if isinstance(data, dict):
         # pick first value that looks like a string
-        for k,v in data.items():
+        for k, v in data.items():
             if isinstance(v, str) and v.strip():
                 return v
         # fallback: stringify a key
         return json.dumps(data)
     raise RuntimeError("Unexpected scraper response format")
+
 
 def upload_to_gcs(local_path, bucket_name, dest_name=None):
     if storage is None:
@@ -69,9 +71,11 @@ def upload_to_gcs(local_path, bucket_name, dest_name=None):
     blob.upload_from_filename(local_path)
     return f"gs://{bucket_name}/{dest_name}"
 
+
 @app.route("/health")
 def health():
-    return jsonify(ok=True, env=os.environ.get("ENV","dev"))
+    return jsonify(ok=True, env=os.environ.get("ENV", "dev"))
+
 
 @app.route("/run", methods=["GET"])
 def run_once():
@@ -92,9 +96,16 @@ def run_once():
                 # fallback: try to run video_builder as a script via subprocess
                 # pass topic as environment variable or arg if your script supports it
                 import subprocess
-                subprocess.run([sys.executable, os.path.join(ROOT,"video_builder.py"), topic], check=True, capture_output=True)
+
+                subprocess.run(
+                    [sys.executable, os.path.join(ROOT, "video_builder.py"), topic],
+                    check=True,
+                    capture_output=True,
+                )
             # find produced mp4 in tmp folder
-            mp4s = glob.glob(os.path.join(tmp, "*.mp4")) + glob.glob(os.path.join(tmp, "**", "*.mp4"), recursive=True)
+            mp4s = glob.glob(os.path.join(tmp, "*.mp4")) + glob.glob(
+                os.path.join(tmp, "**", "*.mp4"), recursive=True
+            )
             if not mp4s:
                 return jsonify(ok=False, error="No MP4 produced"), 500
             # pick largest mp4
@@ -123,6 +134,7 @@ def run_once():
     except Exception as e:
         logging.exception("Run failed")
         return jsonify(ok=False, error=str(e)), 500
+
 
 if __name__ == "__main__":
     # For local testing

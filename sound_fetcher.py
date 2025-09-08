@@ -20,6 +20,7 @@ ENV_FILE = ROOT / ".env"
 
 ASSETS.mkdir(parents=True, exist_ok=True)
 
+
 def load_env() -> Dict[str, str]:
     env = {}
     if ENV_FILE.exists():
@@ -31,15 +32,18 @@ def load_env() -> Dict[str, str]:
             env[k.strip()] = v.strip()
     return env
 
+
 def slugify(s: str, maxlen: int = 80) -> str:
     s = s.lower()
     s = re.sub(r"[^a-z0-9\s\-]+", "", s)
     s = re.sub(r"[\s\-]+", "-", s).strip("-")
     return s[:maxlen] or "item"
 
+
 def run_ffmpeg(cmd: List[str]) -> subprocess.CompletedProcess:
     p = subprocess.run(cmd, text=True, capture_output=True)
     return p
+
 
 def ensure_index() -> Dict:
     if INDEX_JSON.exists():
@@ -49,15 +53,25 @@ def ensure_index() -> Dict:
             pass
     return {"sounds": []}
 
+
 def save_index(idx: Dict):
     INDEX_JSON.write_text(json.dumps(idx, indent=2), encoding="utf-8")
+
 
 def probe_mean_volume_db(path: Path) -> Optional[float]:
     # Use ffmpeg volumedetect to estimate mean_volume in dB
     # Run ffmpeg and capture stderr (volumedetect prints to stderr)
     cmd = [
-        "ffmpeg", "-v", "error", "-i", str(path),
-        "-af", "volumedetect", "-f", "null", "-"
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-af",
+        "volumedetect",
+        "-f",
+        "null",
+        "-",
     ]
     p = subprocess.run(cmd, text=True, capture_output=True)
     out = p.stderr or p.stdout or ""
@@ -74,16 +88,23 @@ def probe_mean_volume_db(path: Path) -> Optional[float]:
 def normalize_to_44100_stereo(src: Path, dst: Path):
     dst.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
-        "ffmpeg", "-y",
-        "-i", str(src),
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(src),
         "-vn",
-        "-af", "loudnorm=I=-20:TP=-1.5:LRA=11",
-        "-ar", "44100", "-ac", "2",
-        str(dst)
+        "-af",
+        "loudnorm=I=-20:TP=-1.5:LRA=11",
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        str(dst),
     ]
     p = run_ffmpeg(cmd)
     if p.returncode != 0:
         raise RuntimeError(f"ffmpeg normalize failed: {p.stderr}")
+
 
 @dataclass
 class SoundMeta:
@@ -95,6 +116,7 @@ class SoundMeta:
     mean_db: Optional[float]
     keywords: List[str]
     label: str
+
 
 # ---------------- Freesound client ----------------
 class FreeSound:
@@ -110,12 +132,13 @@ class FreeSound:
             "filter": filt,
             "fields": "id,name,tags,duration,previews",
             "page_size": page_size,
-            "sort": "score"
+            "sort": "score",
         }
         headers = {"Authorization": f"Token {self.api_key}"}
         r = requests.get(self.SEARCH_URL, params=params, headers=headers, timeout=20)
         r.raise_for_status()
         return r.json().get("results", [])
+
 
 # ---------------- fetcher ----------------
 def fetch_items(
@@ -125,7 +148,7 @@ def fetch_items(
     max_dur: float = 60.0,
     min_mean_db: float = -50.0,
     limit: int = 6,
-    api_key: Optional[str] = None
+    api_key: Optional[str] = None,
 ) -> List[SoundMeta]:
     env = load_env()
     api_key = api_key or env.get("FREESOUND_API_KEY", "").strip()
@@ -134,10 +157,14 @@ def fetch_items(
 
     fs = FreeSound(api_key)
     q = " ".join(keywords)
-    print(f"[sound_fetcher] Searching Freesound for: '{q}' dur[{min_dur},{max_dur}] (label={label})")
+    print(
+        f"[sound_fetcher] Searching Freesound for: '{q}' dur[{min_dur},{max_dur}] (label={label})"
+    )
     results = fs.search(q, min_dur, max_dur, page_size=max(limit * 3, 12))
     if not results:
-        print("[sound_fetcher] No results returned from Freesound. Try different keywords or expand duration range.")
+        print(
+            "[sound_fetcher] No results returned from Freesound. Try different keywords or expand duration range."
+        )
         return []
 
     saved: List[SoundMeta] = []
@@ -190,7 +217,9 @@ def fetch_items(
             norm_mp3.unlink(missing_ok=True)
             continue
         if mean_db < min_mean_db:
-            print(f"[sound_fetcher] too quiet (mean {mean_db:.1f} dB) -> skipping {norm_mp3.name}")
+            print(
+                f"[sound_fetcher] too quiet (mean {mean_db:.1f} dB) -> skipping {norm_mp3.name}"
+            )
             norm_mp3.unlink(missing_ok=True)
             continue
 
@@ -202,7 +231,7 @@ def fetch_items(
             duration=dur,
             mean_db=mean_db,
             keywords=keywords,
-            label=label
+            label=label,
         )
         idx["sounds"].append(asdict(meta))
         saved.append(meta)
@@ -212,6 +241,7 @@ def fetch_items(
     save_index(idx)
     return saved
 
+
 # ---------------- selectors ----------------
 def select_bed(label: str, target_sec: float = 25.0) -> Optional[Path]:
     idx = ensure_index()
@@ -219,7 +249,11 @@ def select_bed(label: str, target_sec: float = 25.0) -> Optional[Path]:
     pool = []
     for s in idx.get("sounds", []):
         try:
-            if s.get("label") == label_slug or s.get("label") == "general" or label_slug in (s.get("keywords") or []):
+            if (
+                s.get("label") == label_slug
+                or s.get("label") == "general"
+                or label_slug in (s.get("keywords") or [])
+            ):
                 pool.append(s)
         except Exception:
             continue
@@ -227,6 +261,7 @@ def select_bed(label: str, target_sec: float = 25.0) -> Optional[Path]:
         return None
     pool.sort(key=lambda s: abs(float(s.get("duration", 0.0)) - float(target_sec)))
     return ROOT / pool[0]["path"]
+
 
 def select_sfx(label: str, max_count: int = 2) -> List[Path]:
     idx = ensure_index()
@@ -244,9 +279,11 @@ def select_sfx(label: str, max_count: int = 2) -> List[Path]:
     chosen = pool[:max_count]
     return [ROOT / p["path"] for p in chosen]
 
+
 # ---------------- CLI ----------------
 if __name__ == "__main__":
     import argparse
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=("beds", "sfx"), default="beds")
     ap.add_argument("--keywords", required=True)
@@ -267,7 +304,7 @@ if __name__ == "__main__":
             max_dur=args.max_dur,
             min_mean_db=args.min_mean_db,
             limit=args.limit,
-            api_key=args.api_key
+            api_key=args.api_key,
         )
     except Exception as e:
         print("ERROR:", e)

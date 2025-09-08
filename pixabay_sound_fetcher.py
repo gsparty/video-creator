@@ -24,10 +24,12 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) python-sound-fetcher",
 }
 
+
 def safe_get(url):
     r = requests.get(url, headers=HEADERS, timeout=20)
     r.raise_for_status()
     return r.text
+
 
 def download_url(url, out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -42,11 +44,12 @@ def download_url(url, out_path: Path):
                 total += len(chunk)
     return out_path, total
 
+
 def find_sound_pages_for_query(query, max_pages=2):
     # Pixabay sound search URL (best-effort)
     query_enc = requests.utils.quote(query)
     found = []
-    for page in range(1, max_pages+1):
+    for page in range(1, max_pages + 1):
         url = f"https://pixabay.com/sounds/search/{query_enc}/?pagi={page}"
         try:
             html = safe_get(url)
@@ -63,6 +66,7 @@ def find_sound_pages_for_query(query, max_pages=2):
                     found.append(full)
         time.sleep(0.8)
     return found
+
 
 def extract_mp3_url_from_sound_page(page_url):
     try:
@@ -94,10 +98,21 @@ def extract_mp3_url_from_sound_page(page_url):
         return m.group(0)
     return None
 
+
 def ffprobe_ok(path: Path):
-    cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(path),
+    ]
     p = subprocess.run(cmd, capture_output=True, text=True)
     return p.returncode == 0 and p.stdout.strip()
+
 
 def fetch(query, label="default", limit=6):
     pages = find_sound_pages_for_query(query)
@@ -129,6 +144,7 @@ def fetch(query, label="default", limit=6):
             print("  download failed:", e)
         time.sleep(1.0)
     print("Downloaded:", downloaded, "files to", out_dir)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

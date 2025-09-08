@@ -18,18 +18,36 @@ OUT = pathlib.Path("stock")
 OUT.mkdir(exist_ok=True)
 
 TOPICS = [
-    "Top lifehack", "3-second kitchen trick", "Mind-blowing sports highlight",
-    "Tiny gadget", "Quick fitness tip", "before after transformation",
-    "Hidden phone feature", "weird food combo", "DIY home improvement", "travel hack"
+    "Top lifehack",
+    "3-second kitchen trick",
+    "Mind-blowing sports highlight",
+    "Tiny gadget",
+    "Quick fitness tip",
+    "before after transformation",
+    "Hidden phone feature",
+    "weird food combo",
+    "DIY home improvement",
+    "travel hack",
 ]
 
+
 def safe_name(s):
-    return "".join(c if c.isalnum() or c in " -_" else "_" for c in s).strip().replace(" ", "-")
+    return (
+        "".join(c if c.isalnum() or c in " -_" else "_" for c in s)
+        .strip()
+        .replace(" ", "-")
+    )
+
 
 def fetch_videos_for_topic(topic, per_topic=3):
     q = topic + " vertical"
     params = {"query": q, "per_page": 15, "orientation": "portrait"}  # try portrait
-    r = requests.get("https://api.pexels.com/videos/search", params=params, headers=HEADERS, timeout=15)
+    r = requests.get(
+        "https://api.pexels.com/videos/search",
+        params=params,
+        headers=HEADERS,
+        timeout=15,
+    )
     if r.status_code != 200:
         print("Pexels error", r.status_code, r.text)
         return []
@@ -43,8 +61,10 @@ def fetch_videos_for_topic(topic, per_topic=3):
         files = v.get("video_files", [])
         # prefer 720x1280 or >=720 width
         candidate = None
-        for f in sorted(files, key=lambda x: (x.get("width",9999), x.get("height",9999))):
-            if f.get("file_type")=="video/mp4":
+        for f in sorted(
+            files, key=lambda x: (x.get("width", 9999), x.get("height", 9999))
+        ):
+            if f.get("file_type") == "video/mp4":
                 candidate = f
                 break
         if not candidate:
@@ -68,6 +88,7 @@ def fetch_videos_for_topic(topic, per_topic=3):
         except Exception as e:
             print("Failed to download", e)
     return saved
+
 
 if __name__ == "__main__":
     for t in TOPICS:

@@ -14,9 +14,18 @@ from typing import List, Optional
 ROOT = Path.cwd()
 SOUNDS_DIR = ROOT / "assets" / "sounds"
 
+
 def _ffprobe_duration(path: Path) -> Optional[float]:
-    cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-           "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(path),
+    ]
     p = subprocess.run(cmd, capture_output=True, text=True)
     if p.returncode != 0:
         return None
@@ -25,18 +34,31 @@ def _ffprobe_duration(path: Path) -> Optional[float]:
     except Exception:
         return None
 
+
 def _volumedetect_mean_db(path: Path) -> Optional[float]:
     # runs volumedetect, returns mean_volume in dB if found
-    cmd = ["ffmpeg", "-v", "error", "-i", str(path), "-af", "volumedetect", "-f", "null", "-"]
+    cmd = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-af",
+        "volumedetect",
+        "-f",
+        "null",
+        "-",
+    ]
     p = subprocess.run(cmd, capture_output=True, text=True)
     out = p.stderr or p.stdout or ""
     m = re.search(r"mean_volume:\s*(-?\d+(?:\.\d+)?)\s*dB", out)
     if m:
         try:
             return float(m.group(1))
-        except:
+        except Exception:
             return None
     return None
+
 
 def _list_candidates(label: str, subfolder_names=("beds",)):
     paths = []
@@ -61,9 +83,13 @@ def _list_candidates(label: str, subfolder_names=("beds",)):
             seen.add(p)
     return res
 
-def select_bed(label: str, target_sec: int = 25,
-               min_duration_ratio=0.5,
-               prefer_mean_db_range=(-35, -8)) -> Optional[Path]:
+
+def select_bed(
+    label: str,
+    target_sec: int = 25,
+    min_duration_ratio=0.5,
+    prefer_mean_db_range=(-35, -8),
+) -> Optional[Path]:
     """
     Select a bed (long background) for a label.
     Strategy:
@@ -87,7 +113,7 @@ def select_bed(label: str, target_sec: int = 25,
             if low <= mean_db <= high:
                 db_score = 20  # preferred loudness
             else:
-                db_score = -abs((mean_db - (low+high)/2))
+                db_score = -abs((mean_db - (low + high) / 2))
         scored.append((length_score + db_score, p, dur, mean_db))
     # sort descending by score
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -98,6 +124,7 @@ def select_bed(label: str, target_sec: int = 25,
     # fallback to longest one
     longest = max(scored, key=lambda x: x[2])
     return longest[1] if longest else None
+
 
 def select_sfx(label: str, max_count: int = 4, max_duration=3.0) -> List[Path]:
     """
@@ -110,7 +137,13 @@ def select_sfx(label: str, max_count: int = 4, max_duration=3.0) -> List[Path]:
     # fallback to any short files in label folder
     label_dir = SOUNDS_DIR / label
     if label_dir.exists():
-        candidates.extend([p for p in label_dir.glob("*.mp3") if "bed" not in p.name.lower() and p not in candidates])
+        candidates.extend(
+            [
+                p
+                for p in label_dir.glob("*.mp3")
+                if "bed" not in p.name.lower() and p not in candidates
+            ]
+        )
     chosen = []
     for p in candidates:
         dur = _ffprobe_duration(p) or 9999.0

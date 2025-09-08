@@ -15,3 +15,4 @@ per-file-ignores =
     auto_short_full.py: E501
     short_maker.py: E501,E722
     test_*.py: E402
+

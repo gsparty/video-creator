@@ -39,3 +39,4 @@ sample_*.jpg
 service-account.json
 # If you want to keep repo json config files tracked, remove the next line.
 *.json
+

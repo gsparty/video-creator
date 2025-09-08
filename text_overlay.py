@@ -1,6 +1,4 @@
-﻿
-
-import hashlib
+﻿import hashlib
 from pathlib import Path
 from tempfile import gettempdir
 
@@ -17,6 +15,7 @@ FONT_PATHS = [
     r"C:\Windows\Fonts\Tahoma.ttf",
 ]
 
+
 def _load_font(size):
     for fp in FONT_PATHS:
         try:
@@ -24,6 +23,7 @@ def _load_font(size):
         except Exception:
             continue
     return ImageFont.load_default()
+
 
 def _wrap_lines(draw, text, font, max_w):
     words = text.split()
@@ -41,6 +41,7 @@ def _wrap_lines(draw, text, font, max_w):
         lines.append(line)
     return lines
 
+
 def _overlay_cache_path(headline, size, bg_box):
     key = f"{headline}|{size[0]}x{size[1]}|{int(bg_box)}"
     h = hashlib.sha1(key.encode("utf-8")).hexdigest()
@@ -48,7 +49,16 @@ def _overlay_cache_path(headline, size, bg_box):
     tmpdir.mkdir(parents=True, exist_ok=True)
     return tmpdir / f"{h}.png"
 
-def make_text_clip(text, fontsize=64, color="white", size=(1080,1920), align="center", duration=5, bg_box=True):
+
+def make_text_clip(
+    text,
+    fontsize=64,
+    color="white",
+    size=(1080, 1920),
+    align="center",
+    duration=5,
+    bg_box=True,
+):
     """
     Render text to a small PNG (half-resolution) and return a MoviePy ImageClip created from the file.
     Avoids large in-memory numpy arrays and caches identical overlays.
@@ -57,12 +67,12 @@ def make_text_clip(text, fontsize=64, color="white", size=(1080,1920), align="ce
     w, h = int(size[0]), int(size[1])
     hw, hh = max(1, w // 2), max(1, h // 2)
 
-    outpath = _overlay_cache_path(text, (w,h), bg_box)
+    outpath = _overlay_cache_path(text, (w, h), bg_box)
     if outpath.exists():
-        return ImageClip(str(outpath)).set_duration(duration).resize(newsize=(w,h))
+        return ImageClip(str(outpath)).set_duration(duration).resize(newsize=(w, h))
 
     font = _load_font(max(8, int(fontsize // 2)))
-    img = Image.new("RGBA", (hw, hh), (0,0,0,0))
+    img = Image.new("RGBA", (hw, hh), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     max_text_w = int(hw * 0.9)
     lines = _wrap_lines(draw, text, font, max_text_w)
@@ -82,7 +92,9 @@ def make_text_clip(text, fontsize=64, color="white", size=(1080,1920), align="ce
         box_h = total_h + pad_y * 2
         box_x = max(0, (hw - box_w) // 2)
         box_y = max(0, y - pad_y)
-        draw.rectangle([box_x, box_y, box_x + box_w, box_y + box_h], fill=(0,0,0,200))
+        draw.rectangle(
+            [box_x, box_y, box_x + box_w, box_y + box_h], fill=(0, 0, 0, 200)
+        )
 
     for ln in lines:
         line_w = int(draw.textlength(ln, font=font))
@@ -93,5 +105,4 @@ def make_text_clip(text, fontsize=64, color="white", size=(1080,1920), align="ce
     arr = np.array(img).astype(np.uint8)
     Image.fromarray(arr).save(outpath, format="PNG")
 
-    return ImageClip(str(outpath)).set_duration(duration).resize(newsize=(w,h))
-
+    return ImageClip(str(outpath)).set_duration(duration).resize(newsize=(w, h))

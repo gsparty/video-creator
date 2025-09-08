@@ -4,19 +4,16 @@ import requests
 
 # ---------------- CONFIG ----------------
 API_KEY = "YOUR_PIXABAY_API_KEY"  # replace with your key
-SEARCH_QUERY = "motorcycle"       # example: "engine", "bike", etc.
-DOWNLOAD_LIMIT = 5                # how many sounds to download
-SAVE_DIR = "sounds"               # local folder
+SEARCH_QUERY = "motorcycle"  # example: "engine", "bike", etc.
+DOWNLOAD_LIMIT = 5  # how many sounds to download
+SAVE_DIR = "sounds"  # local folder
 # ----------------------------------------
 
 PIXABAY_API_URL = "https://pixabay.com/api/sounds/"
 
+
 def search_and_download_sounds(query, limit=5):
-    params = {
-        "key": API_KEY,
-        "q": query,
-        "per_page": limit
-    }
+    params = {"key": API_KEY, "q": query, "per_page": limit}
     response = requests.get(PIXABAY_API_URL, params=params)
     data = response.json()
 
@@ -37,6 +34,7 @@ def search_and_download_sounds(query, limit=5):
             f.write(sound_data.content)
 
     print(f"✅ Download complete. Files saved in '{SAVE_DIR}'")
+
 
 if __name__ == "__main__":
     search_and_download_sounds(SEARCH_QUERY, DOWNLOAD_LIMIT)

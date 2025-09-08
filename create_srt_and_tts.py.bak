@@ -1,0 +1,71 @@
+# create_srt_and_tts.py
+# Usage: python create_srt_and_tts.py <basename> --duration 25
+# Example: python create_srt_and_tts.py 02_3-second-kitchen-trick --duration 25
+
+import argparse
+import os
+
+from gtts import gTTS
+
+
+def fmt_srt_time(seconds):
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds - int(seconds)) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("basename")
+parser.add_argument("--duration", type=float, default=25.0)
+parser.add_argument(
+    "--lines-file",
+    default=None,
+    help="Optional plain text file with one caption per line",
+)
+args = parser.parse_args()
+
+basename = args.basename
+total_dur = args.duration
+
+# If user provided a plain text file with lines, read it. Otherwise get default placeholders.
+if args.lines_file and os.path.exists(args.lines_file):
+    with open(args.lines_file, "r", encoding="utf-8") as f:
+        lines = [l.strip() for l in f.readlines() if l.strip()]
+else:
+    # EDIT these lines to the exact captions you want for the topic
+    lines = [
+        "Top lifehack: Do this one tiny change.",
+        "It saves time and money every day.",
+        "Try it for a week and you will notice the difference.",
+        "Share this tip with a friend.",
+    ]
+
+n = max(1, len(lines))
+seg = total_dur / n
+
+srt_path = f"{basename}.srt"
+with open(srt_path, "w", encoding="utf-8") as s:
+    for i, text in enumerate(lines, start=1):
+        start = (i - 1) * seg
+        end = start + seg
+        s.write(f"{i}\n")
+        s.write(f"{fmt_srt_time(start)} --> {fmt_srt_time(end)}\n")
+        s.write(text + "\n\n")
+
+print(f"WROTE {srt_path}")
+
+# make TTS audio (one file containing all text)
+full_text = " ".join(lines)
+tts = gTTS(full_text, lang="en")
+tts_path = f"{basename}.tts.mp3"
+tts.save(tts_path)
+print(f"WROTE {tts_path}")
+
+# Also output caption start times for SFX mixing
+times_path = f"{basename}.caption_starts.txt"
+with open(times_path, "w", encoding="utf-8") as t:
+    for i in range(n):
+        t.write(f"{(i*seg):.3f}\n")
+print(f"WROTE {times_path} (caption start times)")

@@ -1,0 +1,8 @@
+﻿pytest : ERROR: C:\auto_video_agent\video-creator\pytest.ini:1: unexpected line: '\ufeff[pytest]'
+At line:14 char:1
++ pytest -q 2>&1 | Out-File -Encoding utf8 pytest_results.txt
++ ~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR: C:\auto_...\ufeff[pytest]':String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

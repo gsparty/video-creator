@@ -24,5 +24,6 @@ def clean_audio(input_path: str, output_path: str):
     sf.write(output_path, y_compressed, sr)
     print(f"✅ Cleaned audio saved to {output_path}")
 
+
 if __name__ == "__main__":
     clean_audio("final:audio.flav.mp3", "cleaned_audio.wav")

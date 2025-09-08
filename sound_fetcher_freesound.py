@@ -22,18 +22,36 @@ import requests
 # optional: load .env if present
 try:
     from dotenv import load_dotenv
+
     load_dotenv()  # loads .env into environment if exists
 except Exception:
     pass
 
+
 def ffprobe_ok(p: Path) -> bool:
-    cmd = ["ffprobe", "-v", "error",
-           "-show_entries", "format=duration",
-           "-of", "default=noprint_wrappers=1:nokey=1", str(p)]
+    cmd = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        str(p),
+    ]
     r = subprocess.run(cmd, capture_output=True, text=True)
     return r.returncode == 0 and bool(r.stdout.strip())
 
-def search_and_download(query: str, label: str, api_key: str, mode="beds", limit=6, min_dur=5.0, max_dur=300.0):
+
+def search_and_download(
+    query: str,
+    label: str,
+    api_key: str,
+    mode="beds",
+    limit=6,
+    min_dur=5.0,
+    max_dur=300.0,
+):
     endpoint = "https://freesound.org/apiv2/search/text/"
     headers = {"Authorization": f"Token {api_key}"}
     params = {
@@ -59,7 +77,9 @@ def search_and_download(query: str, label: str, api_key: str, mode="beds", limit
         j = r.json()
         results = j.get("results", [])
         if not results:
-            print("No results returned from Freesound. Try different keywords or expand duration range.")
+            print(
+                "No results returned from Freesound. Try different keywords or expand duration range."
+            )
             break
         for item in results:
             if downloaded >= limit:
@@ -69,7 +89,9 @@ def search_and_download(query: str, label: str, api_key: str, mode="beds", limit
             if not mp3_url:
                 continue
             # safe filename
-            safe_name = f"{label}-{item['id']}-{Path(item['name']).stem}".replace(" ", "_")
+            safe_name = f"{label}-{item['id']}-{Path(item['name']).stem}".replace(
+                " ", "_"
+            )
             out_path = out_dir / f"{safe_name}.mp3"
             if out_path.exists():
                 print("Already have", out_path, "-> skipping")
@@ -98,6 +120,7 @@ def search_and_download(query: str, label: str, api_key: str, mode="beds", limit
         time.sleep(1.0)
     print("Downloaded total:", downloaded, "to", out_dir)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--keywords", required=True)
@@ -106,7 +129,12 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=6)
     parser.add_argument("--min-dur", type=float, default=5.0)
     parser.add_argument("--max-dur", type=float, default=300.0)
-    parser.add_argument("--api-key", type=str, default=None, help="Freesound API key (optional). If not given, reads FREESOUND_API_KEY from env or .env")
+    parser.add_argument(
+        "--api-key",
+        type=str,
+        default=None,
+        help="Freesound API key (optional). If not given, reads FREESOUND_API_KEY from env or .env",
+    )
     args = parser.parse_args()
 
     api_key = args.api_key or os.environ.get("FREESOUND_API_KEY")
@@ -114,4 +142,12 @@ if __name__ == "__main__":
         print("Set FREESOUND_API_KEY in your environment or pass --api-key. Exiting.")
         raise SystemExit(1)
 
-    search_and_download(args.keywords, args.label, api_key, mode=args.mode, limit=args.limit, min_dur=args.min_dur, max_dur=args.max_dur)
+    search_and_download(
+        args.keywords,
+        args.label,
+        api_key,
+        mode=args.mode,
+        limit=args.limit,
+        min_dur=args.min_dur,
+        max_dur=args.max_dur,
+    )

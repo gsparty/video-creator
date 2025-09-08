@@ -11,9 +11,10 @@ def find_script_for_video(video_path):
     txt_candidates = [p.with_suffix(".txt"), p.parent / (p.stem + ".txt")]
     for t in txt_candidates:
         if t.exists():
-            return t.read_text(encoding='utf8').strip()
+            return t.read_text(encoding="utf8").strip()
     # fallback: use slug/filename as text
-    return p.stem.replace('_',' ').replace('-', ' ')
+    return p.stem.replace("_", " ").replace("-", " ")
+
 
 def main(outputs_dir):
     p = pathlib.Path(outputs_dir)
@@ -29,12 +30,13 @@ def main(outputs_dir):
             continue
         print("TTS for", v.name)
         try:
-            tts = gTTS(script, lang='en')
+            tts = gTTS(script, lang="en")
             tts.save(str(out_mp3))
             print("Wrote", out_mp3.name)
         except Exception as e:
             print("TTS error for", v.name, ":", e)
 
+
 if __name__ == "__main__":
-    outdir = sys.argv[1] if len(sys.argv)>1 else "outputs"
+    outdir = sys.argv[1] if len(sys.argv) > 1 else "outputs"
     main(outdir)
