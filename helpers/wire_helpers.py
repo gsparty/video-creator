@@ -15,6 +15,25 @@ import argparse
 import os
 import tempfile
 from pathlib import Path
+# Pillow / MoviePy compatibility shim:
+# Ensure PIL.Image.ANTIALIAS exists (Pillow 10+ moved it under Image.Resampling).
+# This must run before MoviePy imports that expect Image.ANTIALIAS.
+try:
+    import sys
+    import PIL.Image as _pil_image
+    if not hasattr(_pil_image, 'ANTIALIAS'):
+        try:
+            _pil_image.ANTIALIAS = _pil_image.Resampling.LANCZOS
+        except Exception:
+            if hasattr(_pil_image, 'LANCZOS'):
+                _pil_image.ANTIALIAS = _pil_image.LANCZOS
+            else:
+                _pil_image.ANTIALIAS = 1
+    # Also ensure sys.modules entry (robustness)
+    sys.modules['PIL.Image'] = _pil_image
+except Exception:
+    # best-effort shim; don't crash import if Pillow not present
+    pass
 from moviepy.editor import concatenate_videoclips, AudioFileClip
 import logging
 import sys
@@ -126,4 +145,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
