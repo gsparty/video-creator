@@ -100,3 +100,4 @@ def make_pop_text(text: str, duration: float = 2.2, size: Tuple[int, int] = (128
     # gentle pop (MoviePy will interpolate)
     clip = clip.resize(lambda t: 0.8 + 0.2 * min(1, t / 0.12))
     return clip
+
