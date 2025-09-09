@@ -7,7 +7,7 @@ Simple orchestrator to turn a script file into a short video using the helper mo
  - visual_templates.py
 
 Usage (example):
-  python helpers\wire_helpers.py --script-file sample_script.txt --out out.mp4 --sfx-dir assets/sounds
+  python -m helpers.wire_helpers --script-file sample_script.txt --out outputs/test_video.mp4 --sfx-dir assets/sounds
 
 This script is intentionally conservative and meant for local testing first.
 """
@@ -17,11 +17,27 @@ import tempfile
 from pathlib import Path
 from moviepy.editor import concatenate_videoclips, AudioFileClip
 import logging
+import sys
 
-# local helper modules (assumes run from repo root or PYTHONPATH includes repo)
+# If this file is executed directly as a module (python -m helpers.wire_helpers),
+# the repo root will already be the current working directory in most cases.
+# Add a safe fallback that prepends the repo root to sys.path so sibling modules
+# (in repo root) can be imported when invoked another way.
+try:
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+except Exception:
+    pass
+
+# local helper modules (these live in repo root)
 from script_marker_parser import parse_script
 import tts_utils
-import audio_mixer
+try:
+    import audio_mixer
+except Exception:
+    # fallback to ffmpeg-backed mixer when pydub/audioop isn't available
+    import audio_mixer_ffmpeg as audio_mixer
 import visual_templates
 
 logging.basicConfig(level=logging.INFO)
@@ -86,6 +102,9 @@ def produce_from_script(script_text: str, out_path: str, sfx_dir: str = DEFAULT_
     # 5) concatenate
     final = concatenate_videoclips(clips, method="compose")
     final = final.set_fps(24)
+    # ensure output directory exists
+    out_dir = Path(out_path).parent
+    out_dir.mkdir(parents=True, exist_ok=True)
     final.write_videofile(out_path, codec="libx264", audio_codec="aac", threads=2, logger=None)
     LOG.info("Wrote final video to %s", out_path)
     return out_path
@@ -99,13 +118,12 @@ def main():
     p.add_argument("--width", type=int, default=1280)
     p.add_argument("--height", type=int, default=720)
     args = p.parse_args()
-
     if not os.path.exists(args.script_file):
         raise SystemExit("script file missing: " + args.script_file)
     with open(args.script_file, "r", encoding="utf-8") as f:
         script_text = f.read()
-
     produce_from_script(script_text, out_path=args.out, sfx_dir=args.sfx_dir, voice=args.voice, size=(args.width, args.height))
 
 if __name__ == "__main__":
     main()
+
