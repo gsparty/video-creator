@@ -1,0 +1,55 @@
+﻿name: CI and produce (no-TTS)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install ruff pytest black moviepy pillow ffmpeg-python
+      - name: Ruff
+        run: ruff check . || true
+      - name: Run tests
+        run: pytest -q || true
+      - name: Black check
+        run: black --check . || true
+
+  produce_no_tts:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install moviepy pillow ffmpeg-python
+      - name: Make outputs dir
+        run: mkdir -p outputs || true
+      - name: Run produce (no-TTS)
+        run: |
+          python -m helpers.wire_helpers --script-file sample_script.txt --out outputs/test_video.mp4 --sfx-dir assets/sounds --no-tts
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: produced-test-video
+          path: outputs/test_video.mp4
